@@ -1,17 +1,23 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
-import au.qut.edu.eresearch.serverlesssearch.model.DeleteIndexRequest;
-import au.qut.edu.eresearch.serverlesssearch.model.IndexRequest;
-import au.qut.edu.eresearch.serverlesssearch.model.QueryRequest;
-import au.qut.edu.eresearch.serverlesssearch.model.QueryResponse;
+import au.qut.edu.eresearch.serverlesssearch.model.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.wnameless.json.base.JacksonJsonValue;
+import com.github.wnameless.json.flattener.JsonFlattener;
+import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -19,46 +25,57 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @ApplicationScoped
 public class IndexService {
+
+    public static final String ID_TERM = "_id";
 
     @ConfigProperty(name = "index.mount")
     String indexMount;
 
     private static final Logger LOGGER = Logger.getLogger(IndexService.class);
 
-    public QueryResponse query(QueryRequest queryRequest) {
-        QueryParser qp = new QueryParser("content", new StandardAnalyzer());
-        QueryResponse queryResponse = new QueryResponse();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public SearchResults query(SearchRequest queryRequest) {
+        QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
+        SearchResults searchResults = new SearchResults();
         try {
             Query query = qp.parse(queryRequest.getQuery());
             IndexSearcher searcher = getIndexSearcher(queryRequest.getIndexName());
+            long start = System.currentTimeMillis();
             TopDocs topDocs = searcher.search(query, 10);
+            long end = System.currentTimeMillis();
             for (ScoreDoc scoreDocs : topDocs.scoreDocs) {
                 Document document = searcher.doc(scoreDocs.doc);
-                Map<String, String> result = new HashMap<>();
-                for (IndexableField field : document.getFields()) {
-                    result.put(field.name(), field.stringValue());
-                }
-                queryResponse.getDocuments().add(result);
+                String sourceField = document.get(SourceField.FIELD_NAME);
+                Map<String, Object> source = JsonUnflattener.unflattenAsMap(sourceField);
+                searchResults.getHits().getHits().add(new Hit()
+                        .setSource(source)
+                        .setScore(scoreDocs.score)
+                        .setIndex(queryRequest.getIndexName())
+                        .setId(document.get(ID_TERM))
+                );
             }
-            queryResponse.setTotalDocuments((topDocs.totalHits.relation == TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO ? "≥" : "") + topDocs.totalHits.value);
-            return queryResponse;
+            searchResults
+                    .setTook(end - start)
+                    .getHits().getTotal()
+                    .setValue(topDocs.totalHits.value)
+                    .setRelation(topDocs.totalHits.relation == topDocs.totalHits.relation.EQUAL_TO ? "eq" : "gte");
+            return searchResults;
         } catch (ParseException | IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);
         }
     }
 
-
-    public int index(List<IndexRequest> indexRequests) {
+    public void index(List<IndexRequest> indexRequests) {
         Map<String, IndexWriter> writerMap = new HashMap<>();
-        var documentsIndexed = 0;
         for (IndexRequest indexRequest : indexRequests) {
             IndexWriter writer;
             if (writerMap.containsKey(indexRequest.getIndexName())) {
@@ -67,17 +84,24 @@ public class IndexService {
                 writer = getIndexWriter(indexRequest.getIndexName());
                 writerMap.put(indexRequest.getIndexName(), writer);
             }
-            List<Document> documents = new ArrayList<>();
-            for (Map<String, Object> requestDocument : indexRequest.getDocuments()) {
-                Document document = new Document();
-                for (Map.Entry<String, Object> entry : requestDocument.entrySet()) {
-                    document.add(new TextField(entry.getKey(), entry.getValue().toString(), Field.Store.YES));
-                }
-                documents.add(document);
+            Document document = new Document();
+            JsonNode jsonNode = objectMapper.convertValue(indexRequest.getDocument(), JsonNode.class);
+            JacksonJsonValue jacksonJsonValue = new JacksonJsonValue(jsonNode);
+            String source = JsonFlattener.flatten(jacksonJsonValue);
+            Map<String, Object> flattened = JsonFlattener.flattenAsMap(jacksonJsonValue);
+            document.add(new SourceField(source));
+            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
+                document.add(new TextField(entry.getKey(), entry.getValue().toString(), Field.Store.NO));
+                document.add(new AllField(entry.getValue().toString()));
             }
             try {
-                writer.addDocuments(documents);
-                documentsIndexed += documents.size();
+                if (indexRequest.getId() != null) {
+                    document.add(new StringField(ID_TERM, indexRequest.getId(), Field.Store.YES));
+                    writer.updateDocument(new Term(ID_TERM, indexRequest.getId()), document);
+                } else {
+                    document.add(new StringField(ID_TERM, UUID.randomUUID().toString(), Field.Store.YES));
+                    writer.addDocument(document);
+                }
             } catch (IOException e) {
                 LOGGER.error(e);
             }
@@ -90,7 +114,6 @@ public class IndexService {
                 LOGGER.error(e);
             }
         }
-        return documentsIndexed;
     }
 
     public void deleteIndex(DeleteIndexRequest deleteIndexRequest) {
