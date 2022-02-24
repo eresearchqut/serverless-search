@@ -2,8 +2,12 @@ package au.qut.edu.eresearch.serverlesssearch.handler;
 
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+import io.quarkus.test.oidc.server.OidcWiremockTestResource;
+import io.quarkus.test.security.TestSecurity;
+import io.smallrye.jwt.build.Jwt;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -14,6 +18,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 @QuarkusTest
+@QuarkusTestResource(OidcWiremockTestResource.class)
 @TestProfile(SearchHandlerTestProfile.class)
 public class SearchHandlerTest {
 
@@ -21,7 +26,7 @@ public class SearchHandlerTest {
     IndexService indexService;
 
     @Test
-    public void search() throws Exception {
+    public void search()  {
 
         // Given
         List<IndexRequest> indexRequests = List.of(
@@ -46,6 +51,11 @@ public class SearchHandlerTest {
                                 )));
 
         given()
+                .auth().oauth2(Jwt
+                        .claim("scope", "api/search ")
+                        .issuer("https://server.example.com")
+                        .audience("https://service.example.com")
+                        .sign())
                 .contentType("application/json")
                 .accept("application/json")
                 .param("q", "lastName:draper")
@@ -58,10 +68,16 @@ public class SearchHandlerTest {
     }
 
     @Test
+    @TestSecurity(user = "api", roles = "api/search")
     public void searchIndexNotFound() throws Exception {
 
         // Given
         given()
+                .auth().oauth2(Jwt
+                        .claim("scope", "api/search ")
+                        .issuer("https://server.example.com")
+                        .audience("https://service.example.com")
+                        .sign())
                 .contentType("application/json")
                 .accept("application/json")
                 .param("q", "lastName:should-not-be-found")
@@ -71,6 +87,27 @@ public class SearchHandlerTest {
                 .log().body()
                 .statusCode(404)
                 .body( equalTo("no such index [no-index]"));
+    }
+
+    @Test
+    @TestSecurity(user = "api", roles = "api/index")
+    public void searchInvalidRole() throws Exception {
+
+        // Given
+        given()
+                .auth().oauth2(Jwt
+                        .claim("scope", "api/index ")
+                        .issuer("https://server.example.com")
+                        .audience("https://service.example.com")
+                        .sign())
+                .contentType("application/json")
+                .accept("application/json")
+                .param("q", "lastName:should-not-be-permitted")
+                .when()
+                .get("/not-authed/_search")
+                .then()
+                .log().body()
+                .statusCode(403);
     }
 
 
