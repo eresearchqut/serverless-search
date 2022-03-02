@@ -265,17 +265,51 @@
       Properties:
         UserPoolName: !Sub '${AWS::StackName}-ApiUserPool'
 
-    ApiResourceServer:
+    ApiIndexResourceServer:
       Type: AWS::Cognito::UserPoolResourceServer
       Properties:
         UserPoolId: !Ref ApiUserPool
-        Identifier: 'api'
-        Name: !Sub '${AWS::StackName}-ApiResourceServer'
+        Identifier: 'index'
+        Name: !Sub '${AWS::StackName}-ApiIndexResourceServer'
         Scopes:
-          - ScopeName: index
-            ScopeDescription: Index operations
-          - ScopeName: search
-            ScopeDescription: Search operations
+          - ScopeName: all
+            ScopeDescription: All index operations
+          - ScopeName: put
+            ScopeDescription: Index PUT operations
+          - ScopeName: post
+            ScopeDescription: Index POST operations
+          - ScopeName: get
+            ScopeDescription: Index GET operations
+          - ScopeName: delete
+            ScopeDescription: Index DELETE operations
+
+    ApiSearchResourceServer:
+      Type: AWS::Cognito::UserPoolResourceServer
+      Properties:
+        UserPoolId: !Ref ApiUserPool
+        Identifier: 'search'
+        Name: !Sub '${AWS::StackName}-ApiSearchResourceServer'
+        Scopes:
+          - ScopeName: all
+            ScopeDescription: All search operations
+          - ScopeName: get
+            ScopeDescription: Search GET operations
+          - ScopeName: post
+            ScopeDescription: Search POST operations
+
+    ApiKeyResourceServer:
+      Type: AWS::Cognito::UserPoolResourceServer
+      Properties:
+        UserPoolId: !Ref ApiUserPool
+        Identifier: 'key'
+        Name: !Sub '${AWS::StackName}-ApiKeyResourceServer'
+        Scopes:
+          - ScopeName: all
+            ScopeDescription: All key operations
+          - ScopeName: key_get
+            ScopeDescription: Search GET operations
+          - ScopeName: key_post
+            ScopeDescription: Search POST operations
 
     ApiClient:
       Type: AWS::Cognito::UserPoolClient
@@ -290,8 +324,11 @@
         SupportedIdentityProviders:
           - COGNITO
         AllowedOAuthScopes:
-          - api/index
-          - api/search
+          - key/all
+          - search/all
+          - index/all
+
+
 
     ApiUserPoolDomain:
       Type: AWS::Cognito::UserPoolDomain

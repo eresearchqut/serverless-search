@@ -13,7 +13,7 @@ import java.util.UUID;
 
 
 @QuarkusTest
-@TestProfile(IndexServiceTestProfile.class)
+@TestProfile(ServiceTestProfile.class)
 public class IndexServiceTest {
 
     @Inject
@@ -171,7 +171,6 @@ public class IndexServiceTest {
         String index = UUID.randomUUID().toString();
 
 
-
         // when
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
@@ -232,13 +231,13 @@ public class IndexServiceTest {
 
         // when
         indexService.index(List.of(
-                    new IndexRequest()
-                            .setIndexName(index)
-                            .setId("dt")
-                            .setDocument(
-                                    Map.of("firstName", "O'Doyle",
-                                            "lastName", "Rules")
-                            )));
+                new IndexRequest()
+                        .setIndexName(index)
+                        .setId("dt")
+                        .setDocument(
+                                Map.of("firstName", "O'Doyle",
+                                        "lastName", "Rules")
+                        )));
         indexService.deleteIndex(index);
 
         // then
