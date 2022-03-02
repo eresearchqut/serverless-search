@@ -51,6 +51,7 @@ public class IndexHandlerTestProfile implements QuarkusTestProfile {
             properties.put("quarkus.sqs.aws.credentials.static-provider.secret-access-key", "secretKey");
             properties.put("queue.url", queueUrl);
             properties.put("index.mount", "target/indexRequest/");
+            properties.put("user-pool-id", "not.used");
             return properties;
         } catch (Exception e) {
             e.printStackTrace();
