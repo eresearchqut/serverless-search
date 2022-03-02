@@ -306,10 +306,14 @@
         Scopes:
           - ScopeName: all
             ScopeDescription: All key operations
-          - ScopeName: key_get
-            ScopeDescription: Search GET operations
-          - ScopeName: key_post
-            ScopeDescription: Search POST operations
+          - ScopeName: get
+            ScopeDescription: Key GET operations
+          - ScopeName: post
+            ScopeDescription: Key POST operations
+          - ScopeName: delete
+            ScopeDescription: Key DELETE operations
+          - ScopeName: list
+            ScopeDescription: Key list operations
 
     ApiClient:
       Type: AWS::Cognito::UserPoolClient

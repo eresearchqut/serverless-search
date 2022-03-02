@@ -6,10 +6,10 @@ import au.qut.edu.eresearch.serverlesssearch.service.ApiKeyService;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/")
 public class ApiKeyHandler {
@@ -21,13 +21,34 @@ public class ApiKeyHandler {
     @Path("/key")
     @RolesAllowed({"key/all", "key/post"})
     @Produces( MediaType.APPLICATION_JSON )
-    public ApiKey search(ApiKeyRequest apiKeyRequest) {
+    public ApiKey createKey(ApiKeyRequest apiKeyRequest) {
         return apiKeyService.createKey(apiKeyRequest);
     }
 
 
+    @GET
+    @Path("/key/{clientId}")
+    @RolesAllowed({"key/all", "key/get"})
+    @Produces( MediaType.APPLICATION_JSON )
+    public ApiKey getKey(@PathParam("clientId") String clientId) {
+        return apiKeyService.getKey(clientId);
+    }
 
+    @DELETE
+    @Path("/key/{clientId}")
+    @RolesAllowed({"key/all", "key/delete"})
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response deleteKey(@PathParam("clientId") String clientId) {
+        return Response.ok().build();
+    }
 
+    @GET
+    @Path("/key")
+    @RolesAllowed({"key/all", "key/list"})
+    @Produces( MediaType.APPLICATION_JSON )
+    public List<ApiKey> listKeys() {
+        return apiKeyService.listKeys();
+    }
 
 
 }

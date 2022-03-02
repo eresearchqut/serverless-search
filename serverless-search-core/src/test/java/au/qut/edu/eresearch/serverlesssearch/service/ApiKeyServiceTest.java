@@ -21,10 +21,16 @@ public class ApiKeyServiceTest {
     ApiKeyService apiKeyService;
 
     @Test
-    public void createApiKey() {
+    public void lifecycle() {
         ApiKey apiKey = apiKeyService
                 .createKey(new ApiKeyRequest().setClientName("Client").setScopes(List.of("index/put")));
         Assertions.assertEquals("Client", apiKey.getClientName());
+        Assertions.assertNotNull("Client", apiKey.getClientName());
+
+        ApiKey retrieved = apiKeyService.getKey(apiKey.getClientId());
+        Assertions.assertEquals("Client", retrieved.getClientName());
+        Assertions.assertEquals(apiKey.getClientId(), retrieved.getClientId());
+
     }
 
 
