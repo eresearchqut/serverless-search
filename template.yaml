@@ -211,6 +211,7 @@
           Variables:
             QUEUE_URL: !Ref IndexQueue
             INDEX_MOUNT: /mnt/efs/
+            USER_POOL_ID: !Ref ApiUserPool
             DISABLE_SIGNAL_HANDLERS: true
             QUARKUS_OIDC_AUTH_SERVER_URL: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${ApiUserPool}/'
             QUARKUS_OIDC_CLIENT_ID: !Ref ApiClient
@@ -222,6 +223,14 @@
           - EFSWriteAccessPolicy:
               FileSystem: !Ref FileSystem
               AccessPoint: !Ref AccessPoint
+          - Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:ListUserPoolClients
+                  - cognito-idp:DescribeUserPoolClient
+                  - cognito-idp:CreateUserPoolClient
+                  - cognito-idp:DeleteUserPoolClient
+                Resource: !GetAtt ApiUserPool.Arn
 
     AsyncHandler:
       Type: AWS::Serverless::Function
@@ -251,6 +260,7 @@
           Variables:
             QUEUE_URL: !Ref IndexQueue
             INDEX_MOUNT: /mnt/efs/
+            USER_POOL_ID: !Ref ApiUserPool
             DISABLE_SIGNAL_HANDLERS: true
         Policies:
           - AWSLambdaVPCAccessExecutionRole
@@ -317,7 +327,10 @@
 
     ApiClient:
       Type: AWS::Cognito::UserPoolClient
-      DependsOn: ApiResourceServer
+      DependsOn:
+        - ApiIndexResourceServer
+        - ApiSearchResourceServer
+        - ApiKeyResourceServer
       Properties:
         UserPoolId: !Ref ApiUserPool
         ClientName: !Sub '${AWS::StackName}-ApiClient'
@@ -353,9 +366,6 @@
     ApiUserPoolName:
       Description: 'API User Pool Name'
       Value: !Sub '${AWS::StackName}-ApiUserPool'
-    ApiResourceServer:
-      Description: 'API Resource Server'
-      Value: !Ref ApiResourceServer
     ApiUserPoolDomain:
       Description: 'CognitoDomainName URL'
       Value: !Sub 'https://${ApiUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com'

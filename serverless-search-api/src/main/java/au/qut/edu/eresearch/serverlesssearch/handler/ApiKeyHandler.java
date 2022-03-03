@@ -39,6 +39,7 @@ public class ApiKeyHandler {
     @RolesAllowed({"key/all", "key/delete"})
     @Produces( MediaType.APPLICATION_JSON )
     public Response deleteKey(@PathParam("clientId") String clientId) {
+        apiKeyService.deleteKey(clientId);
         return Response.ok().build();
     }
 
