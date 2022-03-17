@@ -14,5 +14,5 @@ phases:
     commands:
       - echo Build started on `date`
       - mvn clean install -Dnative=true
-      - sam deploy --profile account-role --stack-name $STACK_NAME --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $ENV-$STACK_NAME --capabilities CAPABILITY_IAM --parameter-overrides VpcId=$VPC_ID MountTarget1Subnet=$SUBNET_ID_1 MountTarget2Subnet=$SUBNET_ID_2 MountTarget3Subnet=subnet-$SUBNET_ID_3
-
+      - $(aws cloudformation describe-stacks --profile account-role --stack-name $VPC_STACK_NAME | jq -r ".Stacks[].Outputs | map(\"export \(.OutputKey)=\(.OutputValue|tostring)\")|.[]")
+      - sam deploy --profile account-role --stack-name $STACK_NAME --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $ENV-$STACK_NAME --capabilities CAPABILITY_IAM --parameter-overrides VpcId=$VPC MountTarget1Subnet=$QUTPrivateSubnet1 MountTarget2Subnet=$QUTPrivateSubnet2 MountTarget3Subnet=$QUTPrivateSubnet3
