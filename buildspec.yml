@@ -1,3 +1,5 @@
+# codebuild_build -i aws/codebuild/standard:5.0 -a /tmp -c .env
+---
 version: 0.2
 env:
   variables:
