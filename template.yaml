@@ -211,6 +211,7 @@
           Variables:
             QUEUE_URL: !Ref IndexQueue
             INDEX_MOUNT: /mnt/efs/
+            USER_POOL_ID: !Ref ApiUserPool
             DISABLE_SIGNAL_HANDLERS: true
             QUARKUS_OIDC_AUTH_SERVER_URL: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${ApiUserPool}/'
             QUARKUS_OIDC_CLIENT_ID: !Ref ApiClient
@@ -222,6 +223,14 @@
           - EFSWriteAccessPolicy:
               FileSystem: !Ref FileSystem
               AccessPoint: !Ref AccessPoint
+          - Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:ListUserPoolClients
+                  - cognito-idp:DescribeUserPoolClient
+                  - cognito-idp:CreateUserPoolClient
+                  - cognito-idp:DeleteUserPoolClient
+                Resource: !GetAtt ApiUserPool.Arn
 
     AsyncHandler:
       Type: AWS::Serverless::Function
@@ -251,6 +260,7 @@
           Variables:
             QUEUE_URL: !Ref IndexQueue
             INDEX_MOUNT: /mnt/efs/
+            USER_POOL_ID: !Ref ApiUserPool
             DISABLE_SIGNAL_HANDLERS: true
         Policies:
           - AWSLambdaVPCAccessExecutionRole
@@ -265,21 +275,62 @@
       Properties:
         UserPoolName: !Sub '${AWS::StackName}-ApiUserPool'
 
-    ApiResourceServer:
+    ApiIndexResourceServer:
       Type: AWS::Cognito::UserPoolResourceServer
       Properties:
         UserPoolId: !Ref ApiUserPool
-        Identifier: 'api'
-        Name: !Sub '${AWS::StackName}-ApiResourceServer'
+        Identifier: 'index'
+        Name: !Sub '${AWS::StackName}-ApiIndexResourceServer'
         Scopes:
-          - ScopeName: index
-            ScopeDescription: Index operations
-          - ScopeName: search
-            ScopeDescription: Search operations
+          - ScopeName: all
+            ScopeDescription: All index operations
+          - ScopeName: put
+            ScopeDescription: Index PUT operations
+          - ScopeName: post
+            ScopeDescription: Index POST operations
+          - ScopeName: get
+            ScopeDescription: Index GET operations
+          - ScopeName: delete
+            ScopeDescription: Index DELETE operations
+
+    ApiSearchResourceServer:
+      Type: AWS::Cognito::UserPoolResourceServer
+      Properties:
+        UserPoolId: !Ref ApiUserPool
+        Identifier: 'search'
+        Name: !Sub '${AWS::StackName}-ApiSearchResourceServer'
+        Scopes:
+          - ScopeName: all
+            ScopeDescription: All search operations
+          - ScopeName: get
+            ScopeDescription: Search GET operations
+          - ScopeName: post
+            ScopeDescription: Search POST operations
+
+    ApiKeyResourceServer:
+      Type: AWS::Cognito::UserPoolResourceServer
+      Properties:
+        UserPoolId: !Ref ApiUserPool
+        Identifier: 'key'
+        Name: !Sub '${AWS::StackName}-ApiKeyResourceServer'
+        Scopes:
+          - ScopeName: all
+            ScopeDescription: All key operations
+          - ScopeName: get
+            ScopeDescription: Key GET operations
+          - ScopeName: post
+            ScopeDescription: Key POST operations
+          - ScopeName: delete
+            ScopeDescription: Key DELETE operations
+          - ScopeName: list
+            ScopeDescription: Key list operations
 
     ApiClient:
       Type: AWS::Cognito::UserPoolClient
-      DependsOn: ApiResourceServer
+      DependsOn:
+        - ApiIndexResourceServer
+        - ApiSearchResourceServer
+        - ApiKeyResourceServer
       Properties:
         UserPoolId: !Ref ApiUserPool
         ClientName: !Sub '${AWS::StackName}-ApiClient'
@@ -290,8 +341,11 @@
         SupportedIdentityProviders:
           - COGNITO
         AllowedOAuthScopes:
-          - api/index
-          - api/search
+          - key/all
+          - search/all
+          - index/all
+
+
 
     ApiUserPoolDomain:
       Type: AWS::Cognito::UserPoolDomain
@@ -312,9 +366,6 @@
     ApiUserPoolName:
       Description: 'API User Pool Name'
       Value: !Sub '${AWS::StackName}-ApiUserPool'
-    ApiResourceServer:
-      Description: 'API Resource Server'
-      Value: !Ref ApiResourceServer
     ApiUserPoolDomain:
       Description: 'CognitoDomainName URL'
       Value: !Sub 'https://${ApiUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com'

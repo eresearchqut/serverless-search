@@ -52,7 +52,7 @@ public class SearchHandlerTest {
 
         given()
                 .auth().oauth2(Jwt
-                        .claim("scope", "api/search ")
+                        .claim("scope", "search/all")
                         .issuer("https://server.example.com")
                         .audience("https://service.example.com")
                         .sign())
@@ -74,7 +74,7 @@ public class SearchHandlerTest {
         // Given
         given()
                 .auth().oauth2(Jwt
-                        .claim("scope", "api/search ")
+                        .claim("scope", "search/get")
                         .issuer("https://server.example.com")
                         .audience("https://service.example.com")
                         .sign())
@@ -96,7 +96,7 @@ public class SearchHandlerTest {
         // Given
         given()
                 .auth().oauth2(Jwt
-                        .claim("scope", "api/index ")
+                        .claim("scope", "index/all")
                         .issuer("https://server.example.com")
                         .audience("https://service.example.com")
                         .sign())
