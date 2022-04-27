@@ -19,8 +19,11 @@
         <dependency>
             <groupId>io.quarkiverse.lucene</groupId>
             <artifactId>quarkus-lucene</artifactId>
-            <version>0.2</version>
+            <version>0.3</version>
         </dependency>
+
+
+
         <dependency>
             <groupId>io.quarkiverse.amazonservices</groupId>
             <artifactId>quarkus-amazon-common</artifactId>
