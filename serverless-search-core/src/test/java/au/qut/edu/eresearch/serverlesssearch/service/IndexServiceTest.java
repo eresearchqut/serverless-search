@@ -13,7 +13,7 @@ import java.util.UUID;
 
 
 @QuarkusTest
-@TestProfile(ServiceTestProfile.class)
+@TestProfile(au.qut.edu.eresearch.serverlesssearch.TestProfile.class)
 public class IndexServiceTest {
 
     @Inject

@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 @QuarkusTest
-@TestProfile(ServiceTestProfile.class)
+@TestProfile(au.qut.edu.eresearch.serverlesssearch.TestProfile.class)
 public class ApiKeyServiceTest {
 
 

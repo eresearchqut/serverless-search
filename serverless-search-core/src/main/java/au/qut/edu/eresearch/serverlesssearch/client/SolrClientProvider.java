@@ -1,8 +1,12 @@
-package au.qut.edu.eresearch.serverlesssearch.service;
+package au.qut.edu.eresearch.serverlesssearch.client;
 
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
-import org.junit.jupiter.api.Test;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,11 +14,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Date;
 
-public class ContainerTest {
+@ApplicationScoped
+public class SolrClientProvider {
 
-    @Test
-    public void initialise() throws Exception {
-        final Path solrHome = Paths.get("target", "index", "solr");
+    @ConfigProperty(name = "index.mount")
+    String indexMount;
+
+    @Produces
+    public SolrClient getSolrClient() throws Exception {
+        final Path solrHome = Paths.get(indexMount);
         final Path lib = solrHome.resolve("lib");
         if (!Files.isDirectory(lib)) {
             Files.createDirectories(lib);
@@ -29,7 +37,12 @@ public class ContainerTest {
             }
         }
         CoreContainer coreContainer = CoreContainer.createAndLoad(solrHome, solrXml);
-
+        return new EmbeddedSolrServer(coreContainer, "coreName") {
+            @Override
+            public void close()  {
+                //nop
+            }
+        };
 
     }
 }

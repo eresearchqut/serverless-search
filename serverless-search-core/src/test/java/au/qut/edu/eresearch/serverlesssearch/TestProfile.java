@@ -1,4 +1,4 @@
-package au.qut.edu.eresearch.serverlesssearch.service;
+package au.qut.edu.eresearch.serverlesssearch;
 
 import io.quarkus.test.junit.QuarkusTestProfile;
 import org.testcontainers.containers.GenericContainer;
@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServiceTestProfile implements QuarkusTestProfile {
+public class TestProfile implements QuarkusTestProfile {
 
     public Map<String, String> getConfigOverrides() {
 
