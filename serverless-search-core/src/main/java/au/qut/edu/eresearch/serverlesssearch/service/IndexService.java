@@ -1,6 +1,8 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
+import au.qut.edu.eresearch.serverlesssearch.index.AllField;
 import au.qut.edu.eresearch.serverlesssearch.index.FieldMapper;
+import au.qut.edu.eresearch.serverlesssearch.index.SourceField;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -76,7 +78,7 @@ public class IndexService {
                 writerMap.put(indexRequest.getIndexName(), writer);
             }
             Document document = new Document();
-            FieldMapper.FIELD_STREAM.apply(indexRequest.getDocument()).forEach(document::add);
+            FieldMapper.FIELDS.apply(indexRequest.getDocument()).forEach(document::add);
             String id = Optional.ofNullable(indexRequest.getId()).orElse(UUID.randomUUID().toString());
             try {
                 if (indexRequest.getId() != null) {

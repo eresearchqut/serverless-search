@@ -1,15 +1,13 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
-import au.qut.edu.eresearch.serverlesssearch.service.AllField;
-import au.qut.edu.eresearch.serverlesssearch.service.SourceField;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.wnameless.json.base.JacksonJsonValue;
 import com.github.wnameless.json.flattener.JsonFlattener;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -28,28 +26,41 @@ public class FieldMapper {
     private static final Function<JacksonJsonValue, Map<String, Object>> FLATTEN_AS_MAP = JsonFlattener::flattenAsMap;
 
 
-    static Function<String, Stream<IndexableField>> SOURCE_FIELD_MAPPINGS = source ->
+    static Function<String, Stream<IndexableField>> MAP_SOURCE = source ->
             Stream.of(new SourceField(source));
 
-    static Function<Map.Entry<String, Object>, Stream<IndexableField>> FIELD_MAPPINGS = flattenedMapEntry ->
-            Stream.of(new TextField(flattenedMapEntry.getKey(), flattenedMapEntry.getValue().toString(), Field.Store.NO),
+    static IndexableField mapField(String key, Object value) {
+        if (value instanceof Integer) {
+            return new IntPoint(key, (Integer) value);
+        }
+        if (value instanceof Long) {
+            return new LongPoint(key, (Long) value);
+        }
+        if (value instanceof BigInteger) {
+            return new BigIntegerPoint(key, (BigInteger) value);
+        }
+        if (value instanceof Double) {
+            return new DoublePoint(key, (Double) value);
+        }
+        return new TextField(key, value.toString(), Field.Store.NO);
+    }
+
+
+    static Function<Map.Entry<String, Object>, Stream<IndexableField>> MAP_FIELD_AND_ALL = flattenedMapEntry ->
+            Stream.of(mapField(flattenedMapEntry.getKey(), flattenedMapEntry.getValue()),
                     new AllField(flattenedMapEntry.getValue().toString()));
 
-    static Function<Map<String, Object>, Stream<IndexableField>> FIELD_MAPPER = flattenedMap ->
-            flattenedMap.entrySet().stream().flatMap(FIELD_MAPPINGS);
+    static Function<Map<String, Object>, Stream<IndexableField>> MAP_FIELDS = flattenedMap ->
+            flattenedMap.entrySet().stream().flatMap(MAP_FIELD_AND_ALL);
 
 
-    public static Function<Map<String, Object>, Stream<IndexableField>> FIELD_STREAM =
-
+    public static Function<Map<String, Object>, Stream<IndexableField>> FIELDS =
             documentMap -> documentMap == null || documentMap.isEmpty() ? Stream.empty() :
-            JSON_NODE.andThen(JACKSON_JSON_VALUE)
-            .andThen(jacksonJsonValue -> Stream.concat(
-                    FLATTEN_AS_STRING.andThen(SOURCE_FIELD_MAPPINGS).apply(jacksonJsonValue),
-                    FLATTEN_AS_MAP.andThen(FIELD_MAPPER).apply(jacksonJsonValue)))
-            .apply(documentMap);
-
-
-
+                    JSON_NODE.andThen(JACKSON_JSON_VALUE)
+                            .andThen(jacksonJsonValue -> Stream.concat(
+                                    FLATTEN_AS_STRING.andThen(MAP_SOURCE).apply(jacksonJsonValue),
+                                    FLATTEN_AS_MAP.andThen(MAP_FIELDS).apply(jacksonJsonValue)))
+                            .apply(documentMap);
 
 
 }

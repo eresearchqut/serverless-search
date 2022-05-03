@@ -1,28 +1,27 @@
-package au.qut.edu.eresearch.serverlesssearch.service;
+package au.qut.edu.eresearch.serverlesssearch.index;
 
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.util.BytesRef;
 
-public class SourceField extends Field {
+public class AllField extends Field {
 
     public static final FieldType FIELD_TYPE = new FieldType();
 
-    public static final String FIELD_NAME = "_source";
+    public static final String FIELD_NAME = "_all";
 
     static {
-        FIELD_TYPE.setIndexOptions(IndexOptions.NONE); // not indexed
-        FIELD_TYPE.setStored(true);
-        FIELD_TYPE.setOmitNorms(true);
+        FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+        FIELD_TYPE.setTokenized(true);
         FIELD_TYPE.freeze();
     }
 
-    public SourceField(String value) {
+    public AllField(String value) {
         super(FIELD_NAME, value, FIELD_TYPE);
     }
 
-    public SourceField(BytesRef value) {
+    public AllField(BytesRef value) {
         super(FIELD_NAME, value, FIELD_TYPE);
     }
 }
