@@ -1,16 +1,12 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
+import au.qut.edu.eresearch.serverlesssearch.index.FieldMapper;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.wnameless.json.base.JacksonJsonValue;
-import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -35,7 +31,6 @@ public class IndexService {
 
     private static final Logger LOGGER = Logger.getLogger(IndexService.class);
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public SearchResults query(SearchRequest queryRequest) {
         QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
@@ -81,15 +76,7 @@ public class IndexService {
                 writerMap.put(indexRequest.getIndexName(), writer);
             }
             Document document = new Document();
-            JsonNode jsonNode = objectMapper.convertValue(indexRequest.getDocument(), JsonNode.class);
-            JacksonJsonValue jacksonJsonValue = new JacksonJsonValue(jsonNode);
-            String source = JsonFlattener.flatten(jacksonJsonValue);
-            Map<String, Object> flattened = JsonFlattener.flattenAsMap(jacksonJsonValue);
-            document.add(new SourceField(source));
-            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
-                document.add(new TextField(entry.getKey(), entry.getValue().toString(), Field.Store.NO));
-                document.add(new AllField(entry.getValue().toString()));
-            }
+            FieldMapper.FIELD_STREAM.apply(indexRequest.getDocument()).forEach(document::add);
             String id = Optional.ofNullable(indexRequest.getId()).orElse(UUID.randomUUID().toString());
             try {
                 if (indexRequest.getId() != null) {
