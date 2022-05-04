@@ -1,10 +1,12 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.FSDirectory;
 import org.jboss.logging.Logger;
 
@@ -50,6 +52,14 @@ public class IndexUtils {
             return new IndexSearcher(newDirectoryReader);
         } catch (IOException e) {
             throw mapIndexException(indexName, e);
+        }
+    }
+
+    static Document getDocument(IndexSearcher indexSearcher, ScoreDoc scoreDoc) {
+        try {
+            return indexSearcher.doc(scoreDoc.doc);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

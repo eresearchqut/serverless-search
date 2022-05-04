@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.wnameless.json.base.JacksonJsonValue;
 import com.github.wnameless.json.flattener.JsonFlattener;
+import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
 
@@ -24,6 +25,9 @@ public class FieldMapper {
     private static final Function<JacksonJsonValue, String> FLATTEN_AS_STRING = JsonFlattener::flatten;
 
     private static final Function<JacksonJsonValue, Map<String, Object>> FLATTEN_AS_MAP = JsonFlattener::flattenAsMap;
+
+    public static final String ID_TERM = "_id";
+
 
 
     static Function<String, Stream<IndexableField>> MAP_SOURCE = source ->
@@ -62,5 +66,9 @@ public class FieldMapper {
                                     FLATTEN_AS_MAP.andThen(MAP_FIELDS).apply(jacksonJsonValue)))
                             .apply(documentMap);
 
+
+    public static final Function<Document, Map<String, Object>> SOURCE = document -> JsonUnflattener.unflattenAsMap(document.get(SourceField.FIELD_NAME));
+
+    public static final Function<Document, String> ID = document -> document.get(ID_TERM);
 
 }

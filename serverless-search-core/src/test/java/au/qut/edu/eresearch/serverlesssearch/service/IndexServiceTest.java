@@ -43,23 +43,23 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(new SearchRequest().setIndexName(index).setQuery("lastName:Cagney"));
+                .search(index, "lastName:Cagney");
 
         // then
         Assertions.assertEquals(
                 List.of(
-                        new Hit().setSource(
+                        Hit.builder().source(
                                         Map.of("firstName", "James",
                                                 "lastName", "Cagney"))
-                                .setIndex(index)
-                                .setId(results.getHits().getHits().get(0).getId())
-                                .setScore(0.082873434f),
-                        new Hit().setSource(
+                                .index(index)
+                                .id(results.getHits().getHits().get(0).getId())
+                                .score(0.082873434f).build(),
+                        Hit.builder().source(
                                         Map.of("firstName", "James",
                                                 "lastName", "Cagney"))
-                                .setIndex(index)
-                                .setId(results.getHits().getHits().get(1).getId())
-                                .setScore(0.082873434f)
+                                .index(index)
+                                .id(results.getHits().getHits().get(1).getId())
+                                .score(0.082873434f).build()
                 ),
                 results.getHits().getHits());
 
@@ -91,20 +91,20 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(new SearchRequest().setIndexName(index).setQuery("firstName:James"));
+                .search(index, "firstName:James");
 
         // then
         Assertions.assertEquals(
-                new Hits()
-                        .setTotal(new Total().setValue(1).setRelation("eq"))
-                        .setHits(List.of(
-                                new Hit().setSource(
+                Hits.builder().total(Total.builder().value(1).relation("eq").build())
+                        .hits(List.of(
+                                Hit.builder().source(
                                                 Map.of("firstName", "James",
                                                         "lastName", "Dean"))
-                                        .setIndex(index)
-                                        .setScore(0.13076457f)
-                                        .setId(id)
-                        )),
+                                        .index(index)
+                                        .score(0.13076457f)
+                                        .id(id)
+                                        .build()
+                        )).build(),
                 results.getHits());
 
 
@@ -137,28 +137,28 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(new SearchRequest().setIndexName(index).setQuery("donald"));
+                .search(index, "donald");
 
 
         // then
         Assertions.assertEquals(
-                new Hits()
-                        .setTotal(new Total().setValue(2).setRelation("eq"))
-                        .setHits(
+                Hits.builder()
+                        .total(Total.builder().value(2).relation("eq").build())
+                        .hits(
                                 List.of(
-                                        new Hit().setSource(
+                                        Hit.builder().source(
                                                         Map.of("firstName", "Donald",
                                                                 "lastName", "Trump"))
-                                                .setIndex(index)
-                                                .setId("dt")
-                                                .setScore(0.082873434f),
-                                        new Hit().setSource(
+                                                .index(index)
+                                                .id("dt")
+                                                .score(0.082873434f).build(),
+                                        Hit.builder().source(
                                                         Map.of("firstName", "Donald",
                                                                 "lastName", "Duck"))
-                                                .setIndex(index)
-                                                .setId("dd")
-                                                .setScore(0.082873434f)
-                                )),
+                                                .index(index)
+                                                .id("dd")
+                                                .score(0.082873434f).build()
+                                )).build(),
                 results.getHits());
 
 
@@ -175,8 +175,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .search(new SearchRequest()
-                                .setIndexName(index).setQuery("frank")));
+                        .search(index, "frank"));
 
 
         // then
@@ -204,24 +203,6 @@ public class IndexServiceTest {
 
     }
 
-    @Test
-    public void createIndex() {
-
-        // given
-        String index = UUID.randomUUID().toString();
-
-
-        // when
-        Exception exception = Assertions.assertThrows(
-                IndexNotFoundException.class,
-                () -> indexService
-                        .deleteIndex(index));
-
-
-        // then
-        Assertions.assertEquals(String.format("no such index [%s]", index), exception.getMessage());
-
-    }
 
     @Test
     public void deleteIndex() {
@@ -233,7 +214,7 @@ public class IndexServiceTest {
         indexService.index(List.of(
                 new IndexRequest()
                         .setIndex(index)
-                        .setId("dt")
+                        .setId("or")
                         .setDocument(
                                 Map.of("firstName", "O'Doyle",
                                         "lastName", "Rules")
@@ -251,7 +232,7 @@ public class IndexServiceTest {
 
         // given
         String index = UUID.randomUUID().toString();
-        List<IndexRequest> indexRequests = List.of(
+        List<IndexRequest> iIndexRequests = List.of(
                 new IndexRequest()
                         .setIndex(index)
                         .setId("coolridge")
@@ -265,23 +246,24 @@ public class IndexServiceTest {
                                 Map.of("person", Map.of("firstName", "William", "lastName", "Harrison"))
                         )
         );
-        indexService.index(indexRequests);
+        indexService.index(iIndexRequests);
 
         // when
         SearchResults results = indexService
-                .search(new SearchRequest().setIndexName(index).setQuery("person.firstName:Calvin"));
+                .search(index, "person.firstName:Calvin");
 
         // then
         Assertions.assertEquals(
-                new Hits()
-                        .setTotal(new Total().setValue(1).setRelation("eq"))
-                        .setHits(
+                Hits.builder()
+                        .total(Total.builder().value(1).relation("eq").build())
+                        .hits(
                                 List.of(
-                                        new Hit().setSource(
+                                        Hit.builder().source(
                                                         Map.of("person", Map.of("firstName", "Calvin", "lastName", "Coolridge")))
-                                                .setIndex(index).setId("coolridge")
-                                                .setScore(0.31506687f)
-                                )),
+                                                .index(index)
+                                                .id("coolridge")
+                                                .score(0.31506687f).build()
+                                )).build(),
                 results.getHits());
 
     }
@@ -298,23 +280,23 @@ public class IndexServiceTest {
         indexService.index(indexRequests);
 
         // when
-        GetResult result = indexService
-                .getDocument(new GetRequest().setIndex(index).setId("calvin-and-hobbs"));
+        GetDocumentResult document = indexService
+                .getDocument(index, "calvin-and-hobbs");
 
         // then
-        Assertions.assertEquals("calvin-and-hobbs", result.getId());
-        Assertions.assertEquals(index, result.getIndex());
-        Assertions.assertTrue(result.isFound());
-        Assertions.assertEquals(Map.of("firstName", "Calvin", "lastName", "Hobbs"), result.getSource());
+        Assertions.assertEquals("calvin-and-hobbs", document.getId());
+        Assertions.assertEquals(index, document.getIndex());
+        Assertions.assertTrue(document.isFound());
+        Assertions.assertEquals(Map.of("firstName", "Calvin", "lastName", "Hobbs"), document.getSource());
 
-        result = indexService
-                .getDocument(new GetRequest().setIndex(index).setId("hobbs-and-calvin"));
+        document = indexService
+                .getDocument(index, "hobbs-and-calvin");
 
         // then
-        Assertions.assertEquals("hobbs-and-calvin", result.getId());
-        Assertions.assertEquals(index, result.getIndex());
-        Assertions.assertFalse(result.isFound());
-        Assertions.assertNull(result.getSource());
+        Assertions.assertEquals("hobbs-and-calvin", document.getId());
+        Assertions.assertEquals(index, document.getIndex());
+        Assertions.assertFalse(document.isFound());
+        Assertions.assertNull(document.getSource());
 
     }
 

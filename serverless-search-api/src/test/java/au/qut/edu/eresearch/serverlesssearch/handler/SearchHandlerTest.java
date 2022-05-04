@@ -39,16 +39,16 @@ public class SearchHandlerTest {
         );
 
         indexService.index(indexRequests);
-        SearchResults expected = new SearchResults()
-                .setHits(new Hits()
-                        .setTotal(new Total().setValue(1).setRelation("eq"))
-                        .setHits(
+        SearchResults expected = SearchResults.builder()
+                .hits( Hits.builder()
+                        .total(Total.builder().value(1).relation("eq").build())
+                        .hits(
                                 List.of(
-                                        new Hit().setSource(
+                                        Hit.builder().source(
                                                         Map.of("person", Map.of("firstName", "Calvin", "lastName", "Coolridge")))
-                                                .setIndex("searchable")
-                                                .setScore(0.31506687f)
-                                )));
+                                                .index("searchable")
+                                                .score(0.31506687f).build()
+                                )).build()).build();
 
         given()
                 .auth().oauth2(Jwt

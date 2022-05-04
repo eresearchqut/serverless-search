@@ -1,18 +1,17 @@
 package au.qut.edu.eresearch.serverlesssearch.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @RegisterForReflection
 @Getter
-@Builder
+@SuperBuilder
 @EqualsAndHashCode
-public class SearchResults {
+@ToString
+public class GetDocumentResult extends Document {
 
-    private long took;
-
-    private Hits hits;
-
+    private boolean found;
 }

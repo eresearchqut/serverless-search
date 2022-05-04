@@ -22,7 +22,5 @@ public class SourceField extends Field {
         super(FIELD_NAME, value, FIELD_TYPE);
     }
 
-    public SourceField(BytesRef value) {
-        super(FIELD_NAME, value, FIELD_TYPE);
-    }
+
 }

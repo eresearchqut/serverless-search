@@ -1,7 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.handler;
 
 import au.qut.edu.eresearch.serverlesssearch.model.SearchResults;
-import au.qut.edu.eresearch.serverlesssearch.model.SearchRequest;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
 
 import javax.annotation.security.RolesAllowed;
@@ -18,15 +17,11 @@ public class SearchHandler {
     @GET
     @Path("/{index}/_search")
     @RolesAllowed({"search/all", "search/get"})
-    @Produces( MediaType.APPLICATION_JSON )
+    @Produces(MediaType.APPLICATION_JSON)
     public SearchResults search(@PathParam("index") String index,
                                 @QueryParam("q") String query) {
-        return indexService.search(new SearchRequest(index, query));
+        return indexService.search(index, query);
     }
-
-
-
-
 
 
 }

@@ -1,21 +1,22 @@
 package au.qut.edu.eresearch.serverlesssearch.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RegisterForReflection
-@Data
-@NoArgsConstructor
-@Accessors(chain = true)
+@Builder
+@Getter
+@EqualsAndHashCode
+@ToString
 public class Hits {
 
-    private Total total = new Total();
+    private Total total;
 
-    private List<Hit> hits = new ArrayList<>();
+    private List<Hit> hits;
 
 }
