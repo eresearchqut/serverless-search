@@ -12,7 +12,7 @@ import java.util.Map;
 @RegisterForReflection
 @Getter
 @SuperBuilder
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @ToString
 public class Document extends DocumentMetadata {
 

@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @RegisterForReflection
 @Getter
 @SuperBuilder
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @ToString
 public class GetDocumentResult extends Document {
 
