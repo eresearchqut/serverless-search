@@ -20,4 +20,3 @@ public class Document extends DocumentMetadata {
     private Map<String, Object> source;
 
 }
-Added missing
