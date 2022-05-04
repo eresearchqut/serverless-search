@@ -14,10 +14,10 @@ import java.util.stream.Stream;
 
 public class FieldMapper {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Function<Map<String, Object>, JsonNode> JSON_NODE = documentMap ->
-            objectMapper.convertValue(documentMap, JsonNode.class);
+            OBJECT_MAPPER.convertValue(documentMap, JsonNode.class);
 
     private static final Function<JsonNode, JacksonJsonValue> JACKSON_JSON_VALUE = JacksonJsonValue::new;
 

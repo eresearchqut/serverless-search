@@ -21,7 +21,7 @@ public class SearchHandler {
     @Produces( MediaType.APPLICATION_JSON )
     public SearchResults search(@PathParam("index") String index,
                                 @QueryParam("q") String query) {
-        return indexService.query(new SearchRequest(index, query));
+        return indexService.search(new SearchRequest(index, query));
     }
 
 

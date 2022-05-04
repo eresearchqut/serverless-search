@@ -30,10 +30,10 @@ public class SearchHandlerTest {
 
         // Given
         List<IndexRequest> indexRequests = List.of(
-                new IndexRequest().setIndexName("searchable")
+                new IndexRequest().setIndex("searchable")
                         .setDocument(Map.of("firstName", "Don", "lastName", "Johnson"))
                         .setId("djohnson"),
-                new IndexRequest().setIndexName("searchable")
+                new IndexRequest().setIndex("searchable")
                         .setDocument(Map.of("firstName", "Don", "lastName", "Draper"))
                         .setId("ddraper")
         );

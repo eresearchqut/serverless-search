@@ -7,23 +7,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.Map;
-
 @RegisterForReflection
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class IndexRequest {
+public class GetRequest {
+
 
     @JsonProperty("_index")
     private String index;
 
     @JsonProperty("_id")
     private String id;
-
-    private Map<String, Object> document;
-
 
 
 }

@@ -26,13 +26,13 @@ public class IndexServiceTest {
         String index = UUID.randomUUID().toString();
         List<IndexRequest> indexRequests = List.of(
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setDocument(
                                 Map.of("firstName", "James",
                                         "lastName", "Cagney")
                         ),
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setDocument(
                                 Map.of("firstName", "James",
                                         "lastName", "Cagney")
@@ -43,7 +43,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .query(new SearchRequest().setIndexName(index).setQuery("lastName:Cagney"));
+                .search(new SearchRequest().setIndexName(index).setQuery("lastName:Cagney"));
 
         // then
         Assertions.assertEquals(
@@ -74,14 +74,14 @@ public class IndexServiceTest {
 
         indexService.index(List.of(
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setDocument(
                                 Map.of("firstName", "James",
                                         "lastName", "Cagney")
                         )
                         .setId(id),
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setDocument(
                                 Map.of("firstName", "James",
                                         "lastName", "Dean")
@@ -91,7 +91,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .query(new SearchRequest().setIndexName(index).setQuery("firstName:James"));
+                .search(new SearchRequest().setIndexName(index).setQuery("firstName:James"));
 
         // then
         Assertions.assertEquals(
@@ -118,14 +118,14 @@ public class IndexServiceTest {
         String index = UUID.randomUUID().toString();
         List<IndexRequest> indexRequests = List.of(
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setId("dt")
                         .setDocument(
                                 Map.of("firstName", "Donald",
                                         "lastName", "Trump")
                         ),
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setId("dd")
                         .setDocument(
                                 Map.of("firstName", "Donald",
@@ -137,7 +137,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .query(new SearchRequest().setIndexName(index).setQuery("donald"));
+                .search(new SearchRequest().setIndexName(index).setQuery("donald"));
 
 
         // then
@@ -175,7 +175,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .query(new SearchRequest()
+                        .search(new SearchRequest()
                                 .setIndexName(index).setQuery("frank")));
 
 
@@ -232,7 +232,7 @@ public class IndexServiceTest {
         // when
         indexService.index(List.of(
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setId("dt")
                         .setDocument(
                                 Map.of("firstName", "O'Doyle",
@@ -253,13 +253,13 @@ public class IndexServiceTest {
         String index = UUID.randomUUID().toString();
         List<IndexRequest> indexRequests = List.of(
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setId("coolridge")
                         .setDocument(
                                 Map.of("person", Map.of("firstName", "Calvin", "lastName", "Coolridge"))
                         ),
                 new IndexRequest()
-                        .setIndexName(index)
+                        .setIndex(index)
                         .setId("harrison")
                         .setDocument(
                                 Map.of("person", Map.of("firstName", "William", "lastName", "Harrison"))
@@ -269,7 +269,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .query(new SearchRequest().setIndexName(index).setQuery("person.firstName:Calvin"));
+                .search(new SearchRequest().setIndexName(index).setQuery("person.firstName:Calvin"));
 
         // then
         Assertions.assertEquals(
@@ -283,6 +283,38 @@ public class IndexServiceTest {
                                                 .setScore(0.31506687f)
                                 )),
                 results.getHits());
+
+    }
+
+    @Test
+    public void indexAndGetDocument() {
+
+        // given
+        String index = UUID.randomUUID().toString();
+        List<IndexRequest> indexRequests = List.of(new IndexRequest()
+                .setIndex(index)
+                .setId("calvin-and-hobbs")
+                .setDocument(Map.of("firstName", "Calvin", "lastName", "Hobbs")));
+        indexService.index(indexRequests);
+
+        // when
+        GetResult result = indexService
+                .getDocument(new GetRequest().setIndex(index).setId("calvin-and-hobbs"));
+
+        // then
+        Assertions.assertEquals("calvin-and-hobbs", result.getId());
+        Assertions.assertEquals(index, result.getIndex());
+        Assertions.assertTrue(result.isFound());
+        Assertions.assertEquals(Map.of("firstName", "Calvin", "lastName", "Hobbs"), result.getSource());
+
+        result = indexService
+                .getDocument(new GetRequest().setIndex(index).setId("hobbs-and-calvin"));
+
+        // then
+        Assertions.assertEquals("hobbs-and-calvin", result.getId());
+        Assertions.assertEquals(index, result.getIndex());
+        Assertions.assertFalse(result.isFound());
+        Assertions.assertNull(result.getSource());
 
     }
 

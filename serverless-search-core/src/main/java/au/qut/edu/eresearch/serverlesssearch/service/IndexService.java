@@ -13,14 +13,11 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
-import org.apache.lucene.store.FSDirectory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 @ApplicationScoped
@@ -34,48 +31,17 @@ public class IndexService {
     private static final Logger LOGGER = Logger.getLogger(IndexService.class);
 
 
-    public SearchResults query(SearchRequest queryRequest) {
-        QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
-        SearchResults searchResults = new SearchResults();
-        try {
-            Query query = qp.parse(queryRequest.getQuery());
-            IndexSearcher searcher = getIndexSearcher(queryRequest.getIndexName());
-            long start = System.currentTimeMillis();
-            TopDocs topDocs = searcher.search(query, 10);
-            long end = System.currentTimeMillis();
-            for (ScoreDoc scoreDocs : topDocs.scoreDocs) {
-                Document document = searcher.doc(scoreDocs.doc);
-                String sourceField = document.get(SourceField.FIELD_NAME);
-                Map<String, Object> source = JsonUnflattener.unflattenAsMap(sourceField);
-                searchResults.getHits().getHits().add(new Hit()
-                        .setSource(source)
-                        .setScore(scoreDocs.score)
-                        .setIndex(queryRequest.getIndexName())
-                        .setId(document.get(ID_TERM))
-                );
-            }
-            searchResults
-                    .setTook(end - start)
-                    .getHits().getTotal()
-                    .setValue(topDocs.totalHits.value)
-                    .setRelation(topDocs.totalHits.relation == TotalHits.Relation.EQUAL_TO ? "eq" : "gte");
-            return searchResults;
-        } catch (ParseException | IOException e) {
-            LOGGER.error(e);
-            throw new RuntimeException(e);
-        }
-    }
-
     public List<IndexResult> index(List<IndexRequest> indexRequests) {
         Map<String, IndexWriter> writerMap = new HashMap<>();
         List<IndexResult> indexResults = new ArrayList<>();
         for (IndexRequest indexRequest : indexRequests) {
             IndexWriter writer;
-            if (writerMap.containsKey(indexRequest.getIndexName())) {
-                writer = writerMap.get(indexRequest.getIndexName());
+            if (writerMap.containsKey(indexRequest.getIndex())) {
+                writer = writerMap.get(indexRequest.getIndex());
             } else {
-                writer = getIndexWriter(indexRequest.getIndexName());
-                writerMap.put(indexRequest.getIndexName(), writer);
+                writer = IndexUtils.getIndexWriter(indexMount, indexRequest.getIndex(), new IndexWriterConfig(new StandardAnalyzer())
+                        .setOpenMode(IndexWriterConfig.OpenMode.CREATE));
+                writerMap.put(indexRequest.getIndex(), writer);
             }
             Document document = new Document();
             FieldMapper.FIELDS.apply(indexRequest.getDocument()).forEach(document::add);
@@ -88,7 +54,7 @@ public class IndexService {
                     document.add(new StringField(ID_TERM, id, Field.Store.YES));
                     writer.addDocument(document);
                 }
-                indexResults.add(new IndexResult().setIndex(indexRequest.getIndexName()).setId(id));
+                indexResults.add(new IndexResult().setIndex(indexRequest.getIndex()).setId(id));
             } catch (IOException e) {
                 LOGGER.error(e);
             }
@@ -106,73 +72,61 @@ public class IndexService {
 
 
     public void deleteIndex(String indexName) {
-        if (!Files.exists(getIndexPath(indexName))) {
+        if (!IndexUtils.indexPathExists(indexMount, indexName)) {
             throw new IndexNotFoundException(indexName);
         }
+        IndexUtils.deleteIndex(indexMount, indexName);
+    }
+
+
+    public SearchResults search(SearchRequest searchRequest) {
+        QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
+        SearchResults searchResults = new SearchResults();
         try {
-            IndexWriter writer = new IndexWriter(
-                    FSDirectory.open(getIndexPath(indexName)),
-                    new IndexWriterConfig(new StandardAnalyzer())
-                            .setOpenMode(IndexWriterConfig.OpenMode.CREATE));
-            writer.deleteAll();
-            writer.commit();
-            writer.close();
-
-            Files.walkFileTree(getIndexPath(indexName),
-                    new SimpleFileVisitor<>() {
-                        @Override
-                        public FileVisitResult postVisitDirectory(
-                                Path dir, IOException exc) throws IOException {
-                            Files.delete(dir);
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFile(
-                                Path file, BasicFileAttributes attrs)
-                                throws IOException {
-                            Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
-
-        } catch (IOException e) {
-            throw mapIndexException(indexName, e);
+            Query query = qp.parse(searchRequest.getQuery());
+            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, searchRequest.getIndexName());
+            long start = System.currentTimeMillis();
+            TopDocs topDocs = searcher.search(query, 10);
+            long end = System.currentTimeMillis();
+            for (ScoreDoc scoreDocs : topDocs.scoreDocs) {
+                Document document = searcher.doc(scoreDocs.doc);
+                String sourceField = document.get(SourceField.FIELD_NAME);
+                Map<String, Object> source = JsonUnflattener.unflattenAsMap(sourceField);
+                searchResults.getHits().getHits().add(new Hit()
+                        .setSource(source)
+                        .setScore(scoreDocs.score)
+                        .setIndex(searchRequest.getIndexName())
+                        .setId(document.get(ID_TERM))
+                );
+            }
+            searchResults
+                    .setTook(end - start)
+                    .getHits().getTotal()
+                    .setValue(topDocs.totalHits.value)
+                    .setRelation(topDocs.totalHits.relation == TotalHits.Relation.EQUAL_TO ? "eq" : "gte");
+            return searchResults;
+        } catch (ParseException | IOException e) {
+            LOGGER.error(e);
+            throw new RuntimeException(e);
         }
     }
 
+    public GetResult getDocument(GetRequest getRequest) {
 
-    private Path getIndexPath(String indexName) {
-        return Paths.get(indexMount + indexName);
-    }
-
-
-    private RuntimeException mapIndexException(String index, IOException e) {
-        if (e instanceof org.apache.lucene.index.IndexNotFoundException) {
-            return new IndexNotFoundException(index, e);
-        }
-        LOGGER.error(String.format("Unexpected error occurred for index %s", index), e);
-        return new RuntimeException(String.format("Unexpected error occurred for index %s", index), e);
-    }
-
-    private IndexWriter getIndexWriter(String indexName) {
         try {
-            return new IndexWriter(
-                    FSDirectory.open(getIndexPath(indexName)),
-                    new IndexWriterConfig(new StandardAnalyzer())
-                            .setIndexDeletionPolicy(NoDeletionPolicy.INSTANCE)
-            );
+            GetResult result = new GetResult().setIndex(getRequest.getIndex()).setId(getRequest.getId());
+            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, getRequest.getIndex());
+            TopDocs topDocs = searcher.search(new TermQuery(new Term(ID_TERM, getRequest.getId())), 1);
+            if (topDocs.totalHits.value > 0) {
+                Document document = searcher.doc(topDocs.scoreDocs[0].doc);
+                String sourceField = document.get(SourceField.FIELD_NAME);
+                Map<String, Object> source = JsonUnflattener.unflattenAsMap(sourceField);
+                result.setFound(true).setSource(source);
+            }
+            return result;
         } catch (IOException e) {
-            throw mapIndexException(indexName, e);
-        }
-    }
-
-    private IndexSearcher getIndexSearcher(String indexName) {
-        try {
-            DirectoryReader newDirectoryReader = DirectoryReader.open(FSDirectory.open(getIndexPath(indexName)));
-            return new IndexSearcher(newDirectoryReader);
-        } catch (IOException e) {
-            throw mapIndexException(indexName, e);
+            LOGGER.error(e);
+            throw new RuntimeException(e);
         }
     }
 
