@@ -3,6 +3,7 @@ package au.qut.edu.eresearch.serverlesssearch.handler;
 import au.qut.edu.eresearch.serverlesssearch.model.Document;
 import au.qut.edu.eresearch.serverlesssearch.model.IndexRequest;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
+import au.qut.edu.eresearch.serverlesssearch.service.IndexUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -36,6 +37,10 @@ public class IndexHandler {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces( MediaType.APPLICATION_JSON )
     public Document updateDocument(@PathParam("index") String index, @PathParam("id") String id, Map<String, Object> document) throws Exception {
+
+        // Indexing is async we check the index name prior to submitting
+        IndexUtils.validateIndexName(index);
+
         IndexRequest indexRequest = new IndexRequest().setIndex(index).setId(id).setDocument(document);
         String message = INDEX_REQUEST_WRITER.writeValueAsString(indexRequest);
         sqs.sendMessage(m -> m.queueUrl(queueUrl).messageBody(message).messageGroupId(index)

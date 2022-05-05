@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class IndexHandlerTestProfile implements QuarkusTestProfile {
 
     private SqsClient client;
 
-    public final static String QUEUE_NAME = "INDEX_QUEUE";
+    public final static String QUEUE_NAME = "INDEX_QUEUE.fifo";
 
     public Map<String, String> getConfigOverrides() {
         DockerClientFactory.instance().client();
@@ -41,7 +42,9 @@ public class IndexHandlerTestProfile implements QuarkusTestProfile {
                     .httpClientBuilder(UrlConnectionHttpClient.builder())
                     .region(Region.US_EAST_1).build();
 
-            queueUrl = client.createQueue(q -> q.queueName(QUEUE_NAME)).queueUrl();
+            queueUrl = client.createQueue(q -> q.queueName(QUEUE_NAME).attributes(Map.of(
+                    QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true",
+                    QueueAttributeName.FIFO_QUEUE, "true"))).queueUrl();
 
             Map<String, String> properties = new HashMap<>();
             properties.put("quarkus.sqs.endpoint-override", endpointOverride.toString());

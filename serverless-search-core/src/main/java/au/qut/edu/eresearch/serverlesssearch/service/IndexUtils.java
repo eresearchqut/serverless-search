@@ -13,13 +13,25 @@ import org.jboss.logging.Logger;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.regex.Pattern;
 
 
 public class IndexUtils {
 
     private static final Logger LOGGER = Logger.getLogger(IndexUtils.class);
 
+
+    private static final Pattern VALID_INDEX_NAME_PATTERN = Pattern.compile("^[^_-][^A-Z:\"*+/\\|?#><\\s]{1,128}$");
+
+
+    public static void validateIndexName(String indexName) {
+        if (!VALID_INDEX_NAME_PATTERN.matcher(indexName).find()) {
+            throw new InvalidIndexNameException();
+        }
+    }
+
     private static Path getIndexPath(String indexMount, String indexName) {
+        validateIndexName(indexName);
         return Paths.get(indexMount, indexName);
     }
 

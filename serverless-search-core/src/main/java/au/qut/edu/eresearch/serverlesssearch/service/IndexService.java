@@ -24,6 +24,10 @@ import java.util.stream.Collectors;
 public class IndexService {
 
 
+
+
+
+
     @ConfigProperty(name = "index.mount")
     String indexMount;
 
