@@ -7,13 +7,16 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Map;
+
 @RegisterForReflection
 @Getter
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public class Hit extends Document {
+public class Document extends DocumentMetadata {
 
-    @JsonProperty("_score")
-    private float score;
+    @JsonProperty("_source")
+    private Map<String, Object> source;
+
 }

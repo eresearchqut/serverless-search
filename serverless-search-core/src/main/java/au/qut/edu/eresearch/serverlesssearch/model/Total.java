@@ -1,14 +1,16 @@
 package au.qut.edu.eresearch.serverlesssearch.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 @RegisterForReflection
-@Data
-@NoArgsConstructor
-@Accessors(chain = true)
+@Getter
+@Builder
+@EqualsAndHashCode
+@ToString
 public class Total {
 
     private long value;

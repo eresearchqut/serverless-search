@@ -1,8 +1,9 @@
 package au.qut.edu.eresearch.serverlesssearch.handler;
 
+import au.qut.edu.eresearch.serverlesssearch.model.Document;
 import au.qut.edu.eresearch.serverlesssearch.model.IndexRequest;
-import au.qut.edu.eresearch.serverlesssearch.model.IndexResult;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
+import au.qut.edu.eresearch.serverlesssearch.service.IndexUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -28,44 +29,60 @@ public class IndexHandler {
     @Inject
     protected IndexService indexService;
 
-
     private static final ObjectWriter INDEX_REQUEST_WRITER = new ObjectMapper().writerFor(IndexRequest.class);
 
     @PUT
     @Path("/{index}/_doc/{id}")
     @RolesAllowed({"index/all", "index/put"})
     @Consumes(MediaType.APPLICATION_JSON)
-    public IndexResult updateDocument(Map<String, Object> document, @PathParam("index") String index, @PathParam("id") String id) throws Exception {
-        IndexRequest indexRequest = new IndexRequest(index, document, id);
+    @Produces( MediaType.APPLICATION_JSON )
+    public Document updateDocument(@PathParam("index") String index, @PathParam("id") String id, Map<String, Object> document) throws Exception {
+
+        // Indexing is async we check the index name prior to submitting
+        IndexUtils.validateIndexName(index);
+
+        IndexRequest indexRequest = new IndexRequest().setIndex(index).setId(id).setDocument(document);
         String message = INDEX_REQUEST_WRITER.writeValueAsString(indexRequest);
         sqs.sendMessage(m -> m.queueUrl(queueUrl).messageBody(message).messageGroupId(index)
                 .messageDeduplicationId(String.format("%s:%d", index, indexRequest.hashCode())));
-        return new IndexResult().setIndex(index).setId(id);
+        return Document.builder().id(id).index(index).build();
     }
 
     @POST
     @Path("/{index}/_doc/{id}")
     @RolesAllowed({"index/all", "index/post"})
     @Consumes(MediaType.APPLICATION_JSON)
-    public IndexResult updateDocumentPost(Map<String, Object> document, @PathParam("index") String index, @PathParam("id") String id) throws Exception {
-       return updateDocument(document, index, id);
+    @Produces( MediaType.APPLICATION_JSON )
+    public Document updateDocumentPost(Map<String, Object> document, @PathParam("index") String index, @PathParam("id") String id) throws Exception {
+       return updateDocument(index, id, document);
     }
 
     @POST
     @Path("/{index}/_doc")
     @RolesAllowed({"index/all", "index/post"})
     @Consumes(MediaType.APPLICATION_JSON)
-    public IndexResult addDocument(Map<String, Object> document, @PathParam("index") String index) throws Exception {
+    @Produces( MediaType.APPLICATION_JSON )
+    public Document addDocument(Map<String, Object> document, @PathParam("index") String index) throws Exception {
         String id = UUID.randomUUID().toString();
-        return updateDocument(document, index, id);
+        return updateDocument(index, id, document);
     }
 
     @DELETE
     @Path("/{index}")
     @RolesAllowed({"index/all", "index/delete"})
-    public Response addDocument(@PathParam("index") String index)  {
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response deleteIndex(@PathParam("index") String index)  {
          indexService.deleteIndex(index);
          return Response.ok().build();
+    }
+
+    @GET
+    @Path("/{index}/_doc/{id}")
+    @RolesAllowed({"index/all", "index/get"})
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces( MediaType.APPLICATION_JSON )
+    public Document getDocument(@PathParam("index") String index, @PathParam("id") String id) {
+        return indexService.getDocument(index,id);
     }
 
 }

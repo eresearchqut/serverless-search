@@ -6,7 +6,6 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.oidc.server.OidcWiremockTestResource;
-import io.quarkus.test.security.TestSecurity;
 import io.smallrye.jwt.build.Jwt;
 import org.junit.jupiter.api.Test;
 
@@ -30,25 +29,25 @@ public class SearchHandlerTest {
 
         // Given
         List<IndexRequest> indexRequests = List.of(
-                new IndexRequest().setIndexName("searchable")
+                new IndexRequest().setIndex("searchable")
                         .setDocument(Map.of("firstName", "Don", "lastName", "Johnson"))
                         .setId("djohnson"),
-                new IndexRequest().setIndexName("searchable")
+                new IndexRequest().setIndex("searchable")
                         .setDocument(Map.of("firstName", "Don", "lastName", "Draper"))
                         .setId("ddraper")
         );
 
         indexService.index(indexRequests);
-        SearchResults expected = new SearchResults()
-                .setHits(new Hits()
-                        .setTotal(new Total().setValue(1).setRelation("eq"))
-                        .setHits(
+        SearchResults expected = SearchResults.builder()
+                .hits( Hits.builder()
+                        .total(Total.builder().value(1).relation("eq").build())
+                        .hits(
                                 List.of(
-                                        new Hit().setSource(
+                                        Hit.builder().source(
                                                         Map.of("person", Map.of("firstName", "Calvin", "lastName", "Coolridge")))
-                                                .setIndex("searchable")
-                                                .setScore(0.31506687f)
-                                )));
+                                                .index("searchable")
+                                                .score(0.31506687f).build()
+                                )).build()).build();
 
         given()
                 .auth().oauth2(Jwt
@@ -68,7 +67,6 @@ public class SearchHandlerTest {
     }
 
     @Test
-    @TestSecurity(user = "api", roles = "api/search")
     public void searchIndexNotFound() throws Exception {
 
         // Given
@@ -90,7 +88,25 @@ public class SearchHandlerTest {
     }
 
     @Test
-    @TestSecurity(user = "api", roles = "api/index")
+    public void searchInvalidIndexName() throws Exception {
+        // Given
+        given()
+                .auth().oauth2(Jwt
+                        .claim("scope", "search/get")
+                        .issuer("https://server.example.com")
+                        .audience("https://service.example.com")
+                        .sign())
+                .contentType("application/json")
+                .accept("application/json")
+                .param("q", "Invalid index name")
+                .when()
+                .get("/_Invalid*/_search")
+                .then()
+                .statusCode(400)
+                .body( equalTo("Invalid index name. Index names should be less than 128 characters. All letters must be lowercase. Index names can’t begin with underscores (_) or hyphens (-).Index names can’t contain spaces, commas, or the following characters: :, \", *, +, /, \\, |, ?, #, >, or <"));
+    }
+
+    @Test
     public void searchInvalidRole() throws Exception {
 
         // Given

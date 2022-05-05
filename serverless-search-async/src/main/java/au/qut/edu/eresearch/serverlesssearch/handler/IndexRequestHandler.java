@@ -1,5 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.handler;
 
+
 import au.qut.edu.eresearch.serverlesssearch.model.IndexRequest;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
 import com.amazonaws.services.lambda.runtime.Context;

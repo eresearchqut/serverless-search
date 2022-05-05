@@ -1,4 +1,4 @@
-package au.qut.edu.eresearch.serverlesssearch.service;
+package au.qut.edu.eresearch.serverlesssearch.index;
 
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
@@ -21,7 +21,5 @@ public class AllField extends Field {
         super(FIELD_NAME, value, FIELD_TYPE);
     }
 
-    public AllField(BytesRef value) {
-        super(FIELD_NAME, value, FIELD_TYPE);
-    }
+
 }
