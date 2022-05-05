@@ -1,15 +1,14 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
-import au.qut.edu.eresearch.serverlesssearch.index.AllField;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
 import au.qut.edu.eresearch.serverlesssearch.index.IdField;
+import au.qut.edu.eresearch.serverlesssearch.index.QueryMapper;
+import au.qut.edu.eresearch.serverlesssearch.model.QueryStringQuery;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -77,10 +76,9 @@ public class IndexService {
 
 
 
-    public SearchResults search(String index, String queryString) {
+    public SearchResults search(String index, QueryStringQuery queryStringQuery) {
         try {
-            QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
-            Query query = qp.parse(queryString);
+            Query query = QueryMapper.QUERY_STRING_QUERY.apply(queryStringQuery);
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
             long start = System.currentTimeMillis();
             TopDocs topDocs = searcher.search(query, 10);
@@ -101,7 +99,7 @@ public class IndexService {
                                             .score(scoreDoc.score).build()).collect(Collectors.toList()))
                             .build())
                     .build();
-        } catch (ParseException | IOException e) {
+        } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);
         }

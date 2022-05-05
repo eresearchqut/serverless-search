@@ -43,7 +43,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "lastName:Cagney");
+                .search(index, new QueryStringQuery().setQuery("lastName:Cagney"));
 
         // then
         Assertions.assertEquals(
@@ -91,7 +91,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "firstName:James");
+                .search(index, new QueryStringQuery().setQuery("firstName:James"));
 
         // then
         Assertions.assertEquals(
@@ -137,7 +137,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "donald");
+                .search(index, new QueryStringQuery().setQuery("donald"));
 
 
         // then
@@ -175,7 +175,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .search(index, "frank"));
+                        .search(index, new QueryStringQuery().setQuery("frank")));
 
 
         // then
@@ -250,7 +250,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "person.firstName:Calvin");
+                .search(index, new QueryStringQuery().setQuery("person.firstName:Calvin"));
 
         // then
         Assertions.assertEquals(
