@@ -1,9 +1,8 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
+import au.qut.edu.eresearch.serverlesssearch.index.Constants;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
-import au.qut.edu.eresearch.serverlesssearch.index.IdField;
-import au.qut.edu.eresearch.serverlesssearch.index.QueryMapper;
-import au.qut.edu.eresearch.serverlesssearch.model.QueryStringQuery;
+import au.qut.edu.eresearch.serverlesssearch.index.QueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;
@@ -21,11 +20,6 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class IndexService {
-
-
-
-
-
 
     @ConfigProperty(name = "index.mount")
     String indexMount;
@@ -46,7 +40,7 @@ public class IndexService {
             }
             try {
                 if (Optional.ofNullable(indexRequest.getId()).isPresent()) {
-                    writer.updateDocument(new Term(IdField.FIELD_NAME, indexRequest.getId()),
+                    writer.updateDocument(new Term(Constants.Fields.ID_FIELD_NAME, indexRequest.getId()),
                             DocumentMapper.MAP_DOCUMENT.apply(indexRequest.getId(), indexRequest.getDocument()));
                 } else {
                     writer.addDocument(DocumentMapper.MAP_DOCUMENT.apply(UUID.randomUUID().toString(), indexRequest.getDocument()));
@@ -76,9 +70,9 @@ public class IndexService {
 
 
 
-    public SearchResults search(String index, QueryStringQuery queryStringQuery) {
+    public SearchResults search(String index, QueryBuilder queryBuilder) {
         try {
-            Query query = QueryMapper.QUERY_STRING_QUERY.apply(queryStringQuery);
+            Query query = queryBuilder.build();
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
             long start = System.currentTimeMillis();
             TopDocs topDocs = searcher.search(query, 10);
@@ -108,7 +102,7 @@ public class IndexService {
     public GetDocumentResult getDocument(String index, String id) {
         try {
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
-            TopDocs topDocs = searcher.search(new TermQuery(new Term(IdField.FIELD_NAME, id)), 1);
+            TopDocs topDocs = searcher.search(new TermQuery(new Term(Constants.Fields.ID_FIELD_NAME, id)), 1);
             if (topDocs.totalHits.value > 0) {
                 return GetDocumentResult.builder()
                         .index(index)
@@ -130,7 +124,7 @@ public class IndexService {
     public boolean hasDocument(String index, String id) {
         try {
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
-            TopDocs topDocs = searcher.search(new TermQuery(new Term(IdField.FIELD_NAME, id)), 1);
+            TopDocs topDocs = searcher.search(new TermQuery(new Term(Constants.Fields.ID_FIELD_NAME, id)), 1);
             if (topDocs.totalHits.value > 0) {
                 return true;
             }

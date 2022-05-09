@@ -67,9 +67,9 @@ public class DocumentMapper {
 
 
 
-    public static final Function<Document, Map<String, Object>> GET_SOURCE = document -> JsonUnflattener.unflattenAsMap(document.get(SourceField.FIELD_NAME));
+    public static final Function<Document, Map<String, Object>> GET_SOURCE = document -> JsonUnflattener.unflattenAsMap(document.get(Constants.Fields.SOURCE_FIELD_NAME));
 
-    public static final Function<Document, String> GET_ID = document -> document.get(IdField.FIELD_NAME);
+    public static final Function<Document, String> GET_ID = document -> document.get(Constants.Fields.ID_FIELD_NAME);
 
     public static final BiFunction<String, Map<String, Object>, Document> MAP_DOCUMENT = (id, source) -> {
         Document document = new Document();

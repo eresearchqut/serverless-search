@@ -1,5 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
+import au.qut.edu.eresearch.serverlesssearch.index.QueryStringQueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -43,7 +44,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, new QueryStringQuery().setQuery("lastName:Cagney"));
+                .search(index, new QueryStringQueryBuilder("lastName:Cagney"));
 
         // then
         Assertions.assertEquals(
@@ -91,7 +92,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, new QueryStringQuery().setQuery("firstName:James"));
+                .search(index, new QueryStringQueryBuilder("firstName:James"));
 
         // then
         Assertions.assertEquals(
@@ -135,9 +136,10 @@ public class IndexServiceTest {
         );
         indexService.index(indexRequests);
 
+
         // when
         SearchResults results = indexService
-                .search(index, new QueryStringQuery().setQuery("donald"));
+                .search(index, new QueryStringQueryBuilder("donald"));
 
 
         // then
@@ -175,7 +177,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .search(index, new QueryStringQuery().setQuery("frank")));
+                        .search(index, new QueryStringQueryBuilder("lastName:Cagney")));
 
 
         // then
@@ -248,9 +250,11 @@ public class IndexServiceTest {
         );
         indexService.index(iIndexRequests);
 
+
         // when
         SearchResults results = indexService
-                .search(index, new QueryStringQuery().setQuery("person.firstName:Calvin"));
+                .search(index, new QueryStringQueryBuilder("person.firstName:Calvin"));
+
 
         // then
         Assertions.assertEquals(
