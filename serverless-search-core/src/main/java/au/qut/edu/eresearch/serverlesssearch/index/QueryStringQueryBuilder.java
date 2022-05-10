@@ -20,7 +20,8 @@ public class QueryStringQueryBuilder implements QueryBuilder {
         this.queryStringQuery = new QueryStringQuery().setQuery(query);
     }
 
-    @JsonProperty("query_string")
+
+    @JsonProperty(Constants.Query.QUERY_STRING_ATTRIBUTE_NAME)
     private QueryStringQuery queryStringQuery;
 
     @RegisterForReflection

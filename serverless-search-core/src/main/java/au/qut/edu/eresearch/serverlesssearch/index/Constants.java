@@ -50,17 +50,28 @@ public class Constants {
     public static final class Query {
 
         public static final String ANALYZER_ATTRIBUTE_NAME = "analyzer";
+
         public static final String QUERY_ATTRIBUTE_NAME = "query";
 
-        public static final String MATCH_ATTRIBUTE_NAME = "match";
+        public static final String QUERY_STRING_ATTRIBUTE_NAME = "query_string";
 
-        public static final String TERM_ATTRIBUTE_NAME = "term";
+        public static final String DEFAULT_FIELD_ATTRIBUTE_NAME = "default_field";
+
+        public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
+
+        public static final String TERM_QUERY_ATTRIBUTE_NAME = "term";
+
+        public static final Function<String, Map<String, Object>> MAP_QUERY_STRING_QUERY =
+                (query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
+
+        public static final BiFunction<String, String, Map<String, Object>> MAP_TERM_QUERY =
+                (field, query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
     }
 
 
     public static final class Parsers {
 
-        public static final BiFunction<String, String, QueryParser> PARSER  = (defaultField, analyzerName)
+        public static final BiFunction<String, String, QueryParser> PARSER = (defaultField, analyzerName)
                 -> new QueryParser(Optional.ofNullable(defaultField).orElse(Fields.ALL_FIELD_NAME), Analysers.ANALYZER.apply(analyzerName));
 
 

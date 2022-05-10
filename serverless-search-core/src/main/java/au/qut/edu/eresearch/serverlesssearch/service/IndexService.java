@@ -68,12 +68,12 @@ public class IndexService {
     }
 
 
-
-
-    public SearchResults search(String index, QueryBuilder queryBuilder) {
+    public SearchResults search(QueryRequest queryRequest) {
         try {
+            QueryBuilder queryBuilder = Constants.OBJECT_MAPPER.convertValue(queryRequest.getQuery(), QueryBuilder.class);
             Query query = queryBuilder.build();
-            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
+
+            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, queryRequest.getIndex());
             long start = System.currentTimeMillis();
             TopDocs topDocs = searcher.search(query, 10);
             long end = System.currentTimeMillis();
@@ -87,7 +87,7 @@ public class IndexService {
                                     .build())
                             .hits(Arrays.stream(topDocs.scoreDocs).sequential().map(scoreDoc ->
                                     Hit.builder()
-                                            .index(index)
+                                            .index(queryRequest.getIndex())
                                             .id(DocumentMapper.GET_ID.apply(IndexUtils.getDocument(searcher, scoreDoc)))
                                             .source(DocumentMapper.GET_SOURCE.apply(IndexUtils.getDocument(searcher, scoreDoc)))
                                             .score(scoreDoc.score).build()).collect(Collectors.toList()))
@@ -125,10 +125,7 @@ public class IndexService {
         try {
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
             TopDocs topDocs = searcher.search(new TermQuery(new Term(Constants.Fields.ID_FIELD_NAME, id)), 1);
-            if (topDocs.totalHits.value > 0) {
-                return true;
-            }
-            return false;
+            return topDocs.totalHits.value > 0;
         } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);

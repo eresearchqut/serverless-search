@@ -24,7 +24,7 @@ import java.util.Map;
 @Accessors(chain = true)
 public class MatchQueryBuilder implements QueryBuilder {
 
-    @JsonProperty(Constants.Query.MATCH_ATTRIBUTE_NAME)
+    @JsonProperty(Constants.Query.MATCH_QUERY_ATTRIBUTE_NAME)
     private Map<String, Object> match;
 
     @RegisterForReflection

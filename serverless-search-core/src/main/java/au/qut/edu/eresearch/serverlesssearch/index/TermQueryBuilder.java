@@ -23,7 +23,7 @@ public class TermQueryBuilder implements QueryBuilder {
         this.termQuery = Map.of(fieldName, term);
     }
 
-    @JsonProperty(Constants.Query.TERM_ATTRIBUTE_NAME)
+    @JsonProperty(Constants.Query.TERM_QUERY_ATTRIBUTE_NAME)
     private Map<String, String> termQuery;
 
     @Override
