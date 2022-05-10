@@ -25,9 +25,9 @@ public class SearchHandlerTest {
     IndexService indexService;
 
     @Test
-    public void search()  {
+    public void searchByParam()  {
 
-        // Given
+
         List<IndexRequest> indexRequests = List.of(
                 new IndexRequest().setIndex("searchable")
                         .setDocument(Map.of("firstName", "Don", "lastName", "Johnson"))
@@ -38,16 +38,7 @@ public class SearchHandlerTest {
         );
 
         indexService.index(indexRequests);
-        SearchResults expected = SearchResults.builder()
-                .hits( Hits.builder()
-                        .total(Total.builder().value(1).relation("eq").build())
-                        .hits(
-                                List.of(
-                                        Hit.builder().source(
-                                                        Map.of("person", Map.of("firstName", "Calvin", "lastName", "Coolridge")))
-                                                .index("searchable")
-                                                .score(0.31506687f).build()
-                                )).build()).build();
+
 
         given()
                 .auth().oauth2(Jwt
@@ -67,9 +58,40 @@ public class SearchHandlerTest {
     }
 
     @Test
-    public void searchIndexNotFound() throws Exception {
+    public void searchByQueryDsl()  {
 
-        // Given
+
+        List<IndexRequest> indexRequests = List.of(
+                new IndexRequest().setIndex("michaels")
+                        .setDocument(Map.of("firstName", "Michael", "lastName", "Keaton"))
+                        .setId("mkeaton"),
+                new IndexRequest().setIndex("michaels")
+                        .setDocument(Map.of("firstName", "Michael", "lastName", "Jordan"))
+                        .setId("mjordon")
+        );
+
+        indexService.index(indexRequests);
+
+
+        given()
+                .auth().oauth2(Jwt
+                        .claim("scope", "search/all")
+                        .issuer("https://server.example.com")
+                        .audience("https://service.example.com")
+                        .sign())
+                .contentType("application/json")
+                .accept("application/json")
+                .body(Map.of("query", Map.of("match", Map.of("lastName", "Jordan"))))
+                .when()
+                .get("/michaels/_search")
+                .then()
+                .log().body()
+                .statusCode(200)
+                .body("hits.hits[0]._source.lastName", equalTo("Jordan"));
+    }
+
+    @Test
+    public void searchIndexNotFound()  {
         given()
                 .auth().oauth2(Jwt
                         .claim("scope", "search/get")
@@ -88,8 +110,7 @@ public class SearchHandlerTest {
     }
 
     @Test
-    public void searchInvalidIndexName() throws Exception {
-        // Given
+    public void searchInvalidIndexName() {
         given()
                 .auth().oauth2(Jwt
                         .claim("scope", "search/get")
@@ -107,9 +128,7 @@ public class SearchHandlerTest {
     }
 
     @Test
-    public void searchInvalidRole() throws Exception {
-
-        // Given
+    public void searchInvalidRole()  {
         given()
                 .auth().oauth2(Jwt
                         .claim("scope", "index/all")
