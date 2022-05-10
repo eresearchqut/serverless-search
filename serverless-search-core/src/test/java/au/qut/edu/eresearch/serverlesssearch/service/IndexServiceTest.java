@@ -1,5 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
+import au.qut.edu.eresearch.serverlesssearch.index.Constants;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -18,6 +19,8 @@ public class IndexServiceTest {
 
     @Inject
     IndexService indexService;
+
+
 
     @Test
     public void indexAndQueryNoId() {
@@ -43,7 +46,10 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "lastName:Cagney");
+                .search(new QueryRequest()
+                        .setIndex(index)
+                        .setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply("lastName:Cagney")));
+
 
         // then
         Assertions.assertEquals(
@@ -91,7 +97,9 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(index, "firstName:James");
+                .search(new QueryRequest()
+                        .setIndex(index)
+                        .setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply("firstName:James")));
 
         // then
         Assertions.assertEquals(
@@ -135,9 +143,10 @@ public class IndexServiceTest {
         );
         indexService.index(indexRequests);
 
+
         // when
         SearchResults results = indexService
-                .search(index, "donald");
+                .search(new QueryRequest().setIndex(index).setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply("donald")));
 
 
         // then
@@ -175,7 +184,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .search(index, "frank"));
+                        .search(new QueryRequest().setIndex(index).setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply("lastName:cagney"))));
 
 
         // then
@@ -248,9 +257,13 @@ public class IndexServiceTest {
         );
         indexService.index(iIndexRequests);
 
+
         // when
         SearchResults results = indexService
-                .search(index, "person.firstName:Calvin");
+                .search(new QueryRequest()
+                        .setIndex(index)
+                        .setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply("person.firstName:Calvin")));
+
 
         // then
         Assertions.assertEquals(
@@ -297,6 +310,37 @@ public class IndexServiceTest {
         Assertions.assertEquals(index, document.getIndex());
         Assertions.assertFalse(document.isFound());
         Assertions.assertNull(document.getSource());
+
+    }
+
+    @Test
+    public void termMatch() {
+
+        // given
+        String index = UUID.randomUUID().toString();
+        List<IndexRequest> indexRequests = List.of(new IndexRequest()
+                .setIndex(index)
+                .setId("i-am-a-term")
+                .setDocument(Map.of("firstName", "The", "lastName", "Terminator")));
+        indexService.index(indexRequests);
+
+        // when
+        SearchResults results = indexService.search(new QueryRequest().setIndex(index)
+                        .setQuery(Constants.Query.MAP_TERM_QUERY.apply("_id", "i-am-a-term")));
+
+        // then
+        Assertions.assertEquals(
+                Hits.builder()
+                        .total(Total.builder().value(1).relation("eq").build())
+                        .hits(
+                                List.of(
+                                        Hit.builder().source(
+                                                        Map.of("firstName", "The", "lastName", "Terminator"))
+                                                .index(index)
+                                                .id("i-am-a-term")
+                                                .score(0.13076457f).build()
+                                )).build(),
+                results.getHits());
 
     }
 

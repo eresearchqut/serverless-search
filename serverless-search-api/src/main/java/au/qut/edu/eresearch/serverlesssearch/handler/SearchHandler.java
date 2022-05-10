@@ -1,5 +1,7 @@
 package au.qut.edu.eresearch.serverlesssearch.handler;
 
+import au.qut.edu.eresearch.serverlesssearch.index.Constants;
+import au.qut.edu.eresearch.serverlesssearch.model.QueryRequest;
 import au.qut.edu.eresearch.serverlesssearch.model.SearchResults;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
 
@@ -20,7 +22,10 @@ public class SearchHandler {
     @Produces(MediaType.APPLICATION_JSON)
     public SearchResults search(@PathParam("index") String index,
                                 @QueryParam("q") String query) {
-        return indexService.search(index, query);
+        return indexService.search(
+                new QueryRequest()
+                        .setIndex(index)
+                        .setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply(query)));
     }
 
 

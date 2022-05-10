@@ -1,15 +1,13 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
-import au.qut.edu.eresearch.serverlesssearch.index.AllField;
+import au.qut.edu.eresearch.serverlesssearch.index.Constants;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
-import au.qut.edu.eresearch.serverlesssearch.index.IdField;
+import au.qut.edu.eresearch.serverlesssearch.index.QueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -22,11 +20,6 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class IndexService {
-
-
-
-
-
 
     @ConfigProperty(name = "index.mount")
     String indexMount;
@@ -47,7 +40,7 @@ public class IndexService {
             }
             try {
                 if (Optional.ofNullable(indexRequest.getId()).isPresent()) {
-                    writer.updateDocument(new Term(IdField.FIELD_NAME, indexRequest.getId()),
+                    writer.updateDocument(new Term(Constants.Fields.ID_FIELD_NAME, indexRequest.getId()),
                             DocumentMapper.MAP_DOCUMENT.apply(indexRequest.getId(), indexRequest.getDocument()));
                 } else {
                     writer.addDocument(DocumentMapper.MAP_DOCUMENT.apply(UUID.randomUUID().toString(), indexRequest.getDocument()));
@@ -75,16 +68,20 @@ public class IndexService {
     }
 
 
-
-
-    public SearchResults search(String index, String queryString) {
+    public SearchResults search(QueryRequest queryRequest) {
         try {
-            QueryParser qp = new QueryParser(AllField.FIELD_NAME, new StandardAnalyzer());
-            Query query = qp.parse(queryString);
-            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
+            QueryBuilder queryBuilder = Constants.OBJECT_MAPPER.convertValue(queryRequest.getQuery(), QueryBuilder.class);
+            Query query = queryBuilder.build();
+
+            IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, queryRequest.getIndex());
             long start = System.currentTimeMillis();
-            TopDocs topDocs = searcher.search(query, 10);
+
+            int size = Optional.ofNullable(queryRequest.getSize()).orElse(Constants.Query.DEFAULT_SIZE);
+            int from = Optional.ofNullable(queryRequest.getFrom()).orElse(0);
+
+            TopDocs topDocs = searcher.search(query, from + size);
             long end = System.currentTimeMillis();
+
             return SearchResults.builder()
                     .took(end - start)
                     .hits(Hits.builder()
@@ -93,15 +90,15 @@ public class IndexService {
                                     .value(topDocs.totalHits.value)
                                     .relation(topDocs.totalHits.relation == TotalHits.Relation.EQUAL_TO ? "eq" : "gte")
                                     .build())
-                            .hits(Arrays.stream(topDocs.scoreDocs).sequential().map(scoreDoc ->
+                            .hits(Arrays.stream(topDocs.scoreDocs).skip(from).limit(size).sequential().map(scoreDoc ->
                                     Hit.builder()
-                                            .index(index)
+                                            .index(queryRequest.getIndex())
                                             .id(DocumentMapper.GET_ID.apply(IndexUtils.getDocument(searcher, scoreDoc)))
                                             .source(DocumentMapper.GET_SOURCE.apply(IndexUtils.getDocument(searcher, scoreDoc)))
                                             .score(scoreDoc.score).build()).collect(Collectors.toList()))
                             .build())
                     .build();
-        } catch (ParseException | IOException e) {
+        } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);
         }
@@ -110,7 +107,7 @@ public class IndexService {
     public GetDocumentResult getDocument(String index, String id) {
         try {
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
-            TopDocs topDocs = searcher.search(new TermQuery(new Term(IdField.FIELD_NAME, id)), 1);
+            TopDocs topDocs = searcher.search(new TermQuery(new Term(Constants.Fields.ID_FIELD_NAME, id)), 1);
             if (topDocs.totalHits.value > 0) {
                 return GetDocumentResult.builder()
                         .index(index)
@@ -132,11 +129,8 @@ public class IndexService {
     public boolean hasDocument(String index, String id) {
         try {
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, index);
-            TopDocs topDocs = searcher.search(new TermQuery(new Term(IdField.FIELD_NAME, id)), 1);
-            if (topDocs.totalHits.value > 0) {
-                return true;
-            }
-            return false;
+            TopDocs topDocs = searcher.search(new TermQuery(new Term(Constants.Fields.ID_FIELD_NAME, id)), 1);
+            return topDocs.totalHits.value > 0;
         } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);

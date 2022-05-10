@@ -35,7 +35,7 @@ public class IndexHandler {
     @Path("/{index}/_doc/{id}")
     @RolesAllowed({"index/all", "index/put"})
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces( MediaType.APPLICATION_JSON )
+    @Produces(MediaType.APPLICATION_JSON)
     public Document updateDocument(@PathParam("index") String index, @PathParam("id") String id, Map<String, Object> document) throws Exception {
 
         // Indexing is async we check the index name prior to submitting
@@ -52,16 +52,16 @@ public class IndexHandler {
     @Path("/{index}/_doc/{id}")
     @RolesAllowed({"index/all", "index/post"})
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces( MediaType.APPLICATION_JSON )
+    @Produces(MediaType.APPLICATION_JSON)
     public Document updateDocumentPost(Map<String, Object> document, @PathParam("index") String index, @PathParam("id") String id) throws Exception {
-       return updateDocument(index, id, document);
+        return updateDocument(index, id, document);
     }
 
     @POST
     @Path("/{index}/_doc")
     @RolesAllowed({"index/all", "index/post"})
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces( MediaType.APPLICATION_JSON )
+    @Produces(MediaType.APPLICATION_JSON)
     public Document addDocument(Map<String, Object> document, @PathParam("index") String index) throws Exception {
         String id = UUID.randomUUID().toString();
         return updateDocument(index, id, document);
@@ -70,19 +70,28 @@ public class IndexHandler {
     @DELETE
     @Path("/{index}")
     @RolesAllowed({"index/all", "index/delete"})
-    @Produces( MediaType.APPLICATION_JSON )
-    public Response deleteIndex(@PathParam("index") String index)  {
-         indexService.deleteIndex(index);
-         return Response.ok().build();
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteIndex(@PathParam("index") String index) {
+        indexService.deleteIndex(index);
+        return Response.ok().build();
     }
 
     @GET
     @Path("/{index}/_doc/{id}")
     @RolesAllowed({"index/all", "index/get"})
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces( MediaType.APPLICATION_JSON )
+    @Produces(MediaType.APPLICATION_JSON)
     public Document getDocument(@PathParam("index") String index, @PathParam("id") String id) {
-        return indexService.getDocument(index,id);
+        return indexService.getDocument(index, id);
+    }
+
+    @HEAD
+    @Path("/{index}/_doc/{id}")
+    @RolesAllowed({"index/all", "index/get"})
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response hasDocument(@PathParam("index") String index, @PathParam("id") String id) {
+        return indexService.hasDocument(index, id) ? Response.ok().build() : Response.status(Response.Status.NOT_FOUND).build();
     }
 
 }

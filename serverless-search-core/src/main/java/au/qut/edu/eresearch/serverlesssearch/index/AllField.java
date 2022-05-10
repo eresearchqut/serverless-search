@@ -3,13 +3,10 @@ package au.qut.edu.eresearch.serverlesssearch.index;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.util.BytesRef;
 
 public class AllField extends Field {
 
     public static final FieldType FIELD_TYPE = new FieldType();
-
-    public static final String FIELD_NAME = "_all";
 
     static {
         FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
@@ -18,7 +15,7 @@ public class AllField extends Field {
     }
 
     public AllField(String value) {
-        super(FIELD_NAME, value, FIELD_TYPE);
+        super(Constants.Fields.ALL_FIELD_NAME, value, FIELD_TYPE);
     }
 
 
