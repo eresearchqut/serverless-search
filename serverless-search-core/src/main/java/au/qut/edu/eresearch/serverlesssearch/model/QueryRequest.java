@@ -15,9 +15,9 @@ public class QueryRequest {
 
     private String index;
 
-    private int size;
+    private Integer size;
 
-    private int from;
+    private Integer from;
 
     private Map<String, Object> query;
 

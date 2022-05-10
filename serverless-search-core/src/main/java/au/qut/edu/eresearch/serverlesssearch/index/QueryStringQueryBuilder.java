@@ -32,7 +32,7 @@ public class QueryStringQueryBuilder implements QueryBuilder {
 
         private String query;
 
-        @JsonProperty("default_field")
+        @JsonProperty(Constants.Query.DEFAULT_FIELD_ATTRIBUTE_NAME)
         private String defaultField;
 
         private String analyzer;

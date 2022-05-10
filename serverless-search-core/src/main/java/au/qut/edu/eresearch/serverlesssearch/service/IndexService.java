@@ -75,8 +75,13 @@ public class IndexService {
 
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, queryRequest.getIndex());
             long start = System.currentTimeMillis();
-            TopDocs topDocs = searcher.search(query, 10);
+
+            int size = Optional.ofNullable(queryRequest.getSize()).orElse(Constants.Query.DEFAULT_SIZE);
+            int from = Optional.ofNullable(queryRequest.getFrom()).orElse(0);
+
+            TopDocs topDocs = searcher.search(query, from + size);
             long end = System.currentTimeMillis();
+
             return SearchResults.builder()
                     .took(end - start)
                     .hits(Hits.builder()
@@ -85,7 +90,7 @@ public class IndexService {
                                     .value(topDocs.totalHits.value)
                                     .relation(topDocs.totalHits.relation == TotalHits.Relation.EQUAL_TO ? "eq" : "gte")
                                     .build())
-                            .hits(Arrays.stream(topDocs.scoreDocs).sequential().map(scoreDoc ->
+                            .hits(Arrays.stream(topDocs.scoreDocs).skip(from).limit(size).sequential().map(scoreDoc ->
                                     Hit.builder()
                                             .index(queryRequest.getIndex())
                                             .id(DocumentMapper.GET_ID.apply(IndexUtils.getDocument(searcher, scoreDoc)))

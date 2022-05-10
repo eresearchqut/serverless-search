@@ -49,6 +49,8 @@ public class Constants {
 
     public static final class Query {
 
+        public static final int DEFAULT_SIZE = 10;
+
         public static final String ANALYZER_ATTRIBUTE_NAME = "analyzer";
 
         public static final String QUERY_ATTRIBUTE_NAME = "query";
