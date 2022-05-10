@@ -1,7 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.wnameless.json.base.JacksonJsonValue;
 import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
@@ -16,10 +15,9 @@ import java.util.stream.Stream;
 
 public class DocumentMapper {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Function<Map<String, Object>, JsonNode> JSON_NODE = documentMap ->
-            OBJECT_MAPPER.convertValue(documentMap, JsonNode.class);
+            Constants.OBJECT_MAPPER.convertValue(documentMap, JsonNode.class);
 
     private static final Function<JsonNode, JacksonJsonValue> JACKSON_JSON_VALUE = JacksonJsonValue::new;
 
@@ -74,7 +72,7 @@ public class DocumentMapper {
     public static final BiFunction<String, Map<String, Object>, Document> MAP_DOCUMENT = (id, source) -> {
         Document document = new Document();
         DocumentMapper.FIELDS.apply(source).forEach(document::add);
-        document.add(new IdField(id));
+        document.add(new TermField(id));
         return document;
     };
 

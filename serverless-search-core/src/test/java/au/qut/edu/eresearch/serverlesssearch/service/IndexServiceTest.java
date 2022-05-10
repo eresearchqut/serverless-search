@@ -1,6 +1,7 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
 import au.qut.edu.eresearch.serverlesssearch.index.QueryStringQueryBuilder;
+import au.qut.edu.eresearch.serverlesssearch.index.TermQueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -301,6 +302,37 @@ public class IndexServiceTest {
         Assertions.assertEquals(index, document.getIndex());
         Assertions.assertFalse(document.isFound());
         Assertions.assertNull(document.getSource());
+
+    }
+
+    @Test
+    public void termMatch() {
+
+        // given
+        String index = UUID.randomUUID().toString();
+        List<IndexRequest> indexRequests = List.of(new IndexRequest()
+                .setIndex(index)
+                .setId("i-am-a-term")
+                .setDocument(Map.of("firstName", "The", "lastName", "Terminator")));
+        indexService.index(indexRequests);
+
+        // when
+        SearchResults results = indexService
+                .search(index, new TermQueryBuilder("_id", "i-am-a-term"));
+
+        // then
+        Assertions.assertEquals(
+                Hits.builder()
+                        .total(Total.builder().value(1).relation("eq").build())
+                        .hits(
+                                List.of(
+                                        Hit.builder().source(
+                                                        Map.of("firstName", "The", "lastName", "Terminator"))
+                                                .index(index)
+                                                .id("i-am-a-term")
+                                                .score(0.13076457f).build()
+                                )).build(),
+                results.getHits());
 
     }
 

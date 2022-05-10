@@ -4,7 +4,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
 
-public class IdField extends Field {
+public class TermField extends Field {
 
     public static final FieldType FIELD_TYPE = new FieldType();
 
@@ -17,7 +17,7 @@ public class IdField extends Field {
         FIELD_TYPE.freeze();
     }
 
-    public IdField(String value) {
+    public TermField(String value) {
         super(Constants.Fields.ID_FIELD_NAME, value, FIELD_TYPE);
     }
 

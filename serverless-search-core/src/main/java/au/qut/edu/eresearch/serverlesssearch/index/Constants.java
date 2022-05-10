@@ -1,6 +1,9 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.StopAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
@@ -11,15 +14,26 @@ import java.util.function.Function;
 
 public class Constants {
 
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     public static final class Analysers {
 
         public static final String STANDARD_ANALYZER_NAME = "standard";
 
         public static final Analyzer STANDARD_ANALYZER = new StandardAnalyzer();
 
+
+        public static final String STOP_ANALYZER_NAME = "stop";
+
+
+        public static final Analyzer STOP_ANALYZER = new StopAnalyzer(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
+
         public static final Analyzer DEFAULT_ANALYZER = STANDARD_ANALYZER;
 
-        public static final Map<String, Analyzer> ANALYZERS = Map.of(STANDARD_ANALYZER_NAME, STANDARD_ANALYZER);
+        public static final Map<String, Analyzer> ANALYZERS = Map.of(
+                STANDARD_ANALYZER_NAME, STANDARD_ANALYZER,
+                STOP_ANALYZER_NAME, STOP_ANALYZER
+        );
 
         public static final Function<String, Analyzer> ANALYZER = (analyzerName) ->
                 ANALYZERS.getOrDefault(Optional.ofNullable(analyzerName).orElse(STANDARD_ANALYZER_NAME), DEFAULT_ANALYZER);

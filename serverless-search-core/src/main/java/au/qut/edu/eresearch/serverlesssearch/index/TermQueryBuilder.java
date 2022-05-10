@@ -18,6 +18,11 @@ import java.util.Map;
 @Accessors(chain = true)
 public class TermQueryBuilder implements QueryBuilder {
 
+
+    public TermQueryBuilder(String fieldName, String term) {
+        this.termQuery = Map.of(fieldName, term);
+    }
+
     @JsonProperty(Constants.Query.TERM_ATTRIBUTE_NAME)
     private Map<String, String> termQuery;
 

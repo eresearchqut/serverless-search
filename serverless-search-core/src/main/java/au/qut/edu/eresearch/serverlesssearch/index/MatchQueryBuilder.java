@@ -25,30 +25,43 @@ import java.util.Map;
 public class MatchQueryBuilder implements QueryBuilder {
 
     @JsonProperty(Constants.Query.MATCH_ATTRIBUTE_NAME)
-    private Map<String, Object> matchQuery;
+    private Map<String, Object> match;
+
+    @RegisterForReflection
+    @Data
+    @NoArgsConstructor
+    @Accessors(chain = true)
+    public static class MatchQuery {
+
+        private String query;
+
+        @JsonProperty(Constants.Query.ANALYZER_ATTRIBUTE_NAME)
+        private String analyzerName = Constants.Analysers.STANDARD_ANALYZER_NAME;
+
+    }
+
 
     @Override
     public Query build() {
-        Map.Entry<String, Object> matchEntry = matchQuery.entrySet().stream().findAny().orElseThrow(() -> new RuntimeException("No match specified"));
-        String query = null;
-        String analyzerName = Constants.Analysers.STANDARD_ANALYZER_NAME;
+
+        Map.Entry<String, Object> matchEntry = this.match.entrySet().stream().findAny().orElseThrow(() -> new RuntimeException("No match specified"));
         String fieldName = matchEntry.getKey();
+        MatchQuery matchQuery = null;
+
         if (matchEntry.getValue() instanceof String) {
-            query = (String) matchEntry.getValue();
+            matchQuery = new MatchQuery().setQuery((String) matchEntry.getValue());
         } else if (matchEntry.getValue() instanceof Map) {
-            Map<String, Object> matchConfig = (Map<String, Object>) matchEntry.getValue();
-            if (!matchConfig.containsKey(Constants.Query.QUERY_ATTRIBUTE_NAME)) {
-                throw new RuntimeException("No query specified");
-            }
-            query = matchConfig.get(Constants.Query.QUERY_ATTRIBUTE_NAME).toString();
-            analyzerName = matchConfig.getOrDefault(Constants.Query.ANALYZER_ATTRIBUTE_NAME, Constants.Analysers.STANDARD_ANALYZER_NAME).toString();
-        } else {
+            matchQuery = Constants.OBJECT_MAPPER.convertValue(matchEntry.getValue(), MatchQuery.class);
+        }
+
+        if (matchQuery == null || matchQuery.getQuery() == null) {
             throw new RuntimeException("No query specified");
         }
 
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        Analyzer analyzer = Constants.Analysers.ANALYZER.apply(analyzerName);
-        try (TokenStream stream = analyzer.tokenStream(fieldName, new StringReader(query))) {
+
+        try (Analyzer analyzer = Constants.Analysers.ANALYZER.apply(matchQuery.getAnalyzerName());
+             TokenStream stream = analyzer.tokenStream(fieldName, new StringReader(matchQuery.getQuery()))) {
             stream.reset();
             while (stream.incrementToken()) {
                 Query termQuery = new TermQuery(new Term(
