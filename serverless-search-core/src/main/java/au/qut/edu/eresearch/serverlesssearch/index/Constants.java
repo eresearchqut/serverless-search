@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Constants {
 
@@ -20,23 +21,23 @@ public class Constants {
 
         public static final String STANDARD_ANALYZER_NAME = "standard";
 
-        public static final Analyzer STANDARD_ANALYZER = new StandardAnalyzer();
+        public static final Supplier<Analyzer> STANDARD_ANALYZER = StandardAnalyzer::new;
 
 
         public static final String STOP_ANALYZER_NAME = "stop";
 
 
-        public static final Analyzer STOP_ANALYZER = new StopAnalyzer(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
+        public static final Supplier<Analyzer> STOP_ANALYZER = () -> new StopAnalyzer(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
 
-        public static final Analyzer DEFAULT_ANALYZER = STANDARD_ANALYZER;
+        public static final Supplier<Analyzer> DEFAULT_ANALYZER = STANDARD_ANALYZER;
 
-        public static final Map<String, Analyzer> ANALYZERS = Map.of(
+        public static final Map<String, Supplier<Analyzer>> ANALYZERS = Map.of(
                 STANDARD_ANALYZER_NAME, STANDARD_ANALYZER,
                 STOP_ANALYZER_NAME, STOP_ANALYZER
         );
 
         public static final Function<String, Analyzer> ANALYZER = (analyzerName) ->
-                ANALYZERS.getOrDefault(Optional.ofNullable(analyzerName).orElse(STANDARD_ANALYZER_NAME), DEFAULT_ANALYZER);
+                ANALYZERS.getOrDefault(Optional.ofNullable(analyzerName).orElse(STANDARD_ANALYZER_NAME), DEFAULT_ANALYZER).get();
 
     }
 
