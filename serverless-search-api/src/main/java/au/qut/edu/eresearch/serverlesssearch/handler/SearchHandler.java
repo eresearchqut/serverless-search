@@ -1,6 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.handler;
 
-import au.qut.edu.eresearch.serverlesssearch.index.Constants;
+import au.qut.edu.eresearch.serverlesssearch.Constants;
 import au.qut.edu.eresearch.serverlesssearch.model.QueryRequest;
 import au.qut.edu.eresearch.serverlesssearch.model.SearchResults;
 import au.qut.edu.eresearch.serverlesssearch.service.IndexService;
@@ -46,7 +46,7 @@ public class SearchHandler {
                             .setFrom(from)
                             .setFrom(size)
                             .setIndex(index)
-                            .setQuery(Constants.Query.MAP_QUERY_STRING_QUERY.apply(q)));
+                            .setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply(q)));
         }
 
         return indexService.search(queryRequest.setIndex(index));

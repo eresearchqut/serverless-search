@@ -1,8 +1,8 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
-import au.qut.edu.eresearch.serverlesssearch.index.Constants;
+import au.qut.edu.eresearch.serverlesssearch.Constants;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
-import au.qut.edu.eresearch.serverlesssearch.index.QueryBuilder;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;

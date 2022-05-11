@@ -1,5 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
+import au.qut.edu.eresearch.serverlesssearch.Constants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.wnameless.json.base.JacksonJsonValue;
 import com.github.wnameless.json.flattener.JsonFlattener;

@@ -1,5 +1,7 @@
-package au.qut.edu.eresearch.serverlesssearch.index;
+package au.qut.edu.eresearch.serverlesssearch.query;
 
+import au.qut.edu.eresearch.serverlesssearch.query.MatchQueryBuilder;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;

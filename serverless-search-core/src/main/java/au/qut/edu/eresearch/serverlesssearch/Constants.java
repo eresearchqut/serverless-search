@@ -1,4 +1,4 @@
-package au.qut.edu.eresearch.serverlesssearch.index;
+package au.qut.edu.eresearch.serverlesssearch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.analysis.Analyzer;
@@ -7,6 +7,7 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -62,13 +63,24 @@ public class Constants {
 
         public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
 
+        public static final String MATCH_ALL_QUERY_ATTRIBUTE_NAME = "match_all";
+
+        public static final String MATCH_NONE_QUERY_ATTRIBUTE_NAME = "match_none";
+
         public static final String TERM_QUERY_ATTRIBUTE_NAME = "term";
 
-        public static final Function<String, Map<String, Object>> MAP_QUERY_STRING_QUERY =
+        public static final Function<String, Map<String, Object>> QUERY_STRING_QUERY_MAP =
                 (query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
 
-        public static final BiFunction<String, String, Map<String, Object>> MAP_TERM_QUERY =
-                (field, query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
+
+        public static final Map<String, Object> MATCH_ALL_QUERY_MAP =
+                Map.of(MATCH_ALL_QUERY_ATTRIBUTE_NAME, Collections.EMPTY_MAP);
+
+        public static final Map<String, Object> MATCH_NONE_QUERY_MAP =
+                Map.of(MATCH_NONE_QUERY_ATTRIBUTE_NAME, Collections.EMPTY_MAP);
+
+        public static final BiFunction<String, String, Map<String, Object>> TERM_QUERY_MAP =
+                (field, term) -> Map.of(TERM_QUERY_ATTRIBUTE_NAME, Map.of(field, term));
     }
 
 

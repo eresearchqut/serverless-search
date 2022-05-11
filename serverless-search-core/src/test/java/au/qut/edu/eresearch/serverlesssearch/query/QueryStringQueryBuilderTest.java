@@ -1,5 +1,7 @@
-package au.qut.edu.eresearch.serverlesssearch.index;
+package au.qut.edu.eresearch.serverlesssearch.query;
 
+import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryStringQueryBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
