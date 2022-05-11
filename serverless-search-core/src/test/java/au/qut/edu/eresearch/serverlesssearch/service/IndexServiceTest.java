@@ -14,7 +14,7 @@ import java.util.UUID;
 
 
 @QuarkusTest
-@TestProfile(ServiceTestProfile.class)
+@TestProfile(ApiKeyServiceTestProfile.class)
 public class IndexServiceTest {
 
     @Inject
