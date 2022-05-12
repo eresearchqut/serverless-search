@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.List;
 import java.util.Map;
 
 @RegisterForReflection
@@ -20,5 +21,8 @@ public class QueryRequest {
     private Integer from;
 
     private Map<String, Object> query;
+
+    private List<Map<String, Map<String, String>>> sort;
+
 
 }

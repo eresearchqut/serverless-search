@@ -78,8 +78,9 @@ public class IndexService {
 
             int size = Optional.ofNullable(queryRequest.getSize()).orElse(Constants.Query.DEFAULT_SIZE);
             int from = Optional.ofNullable(queryRequest.getFrom()).orElse(0);
+            Sort sort = Constants.Query.SORT.apply(queryRequest.getSort());
 
-            TopDocs topDocs = searcher.search(query, from + size);
+            TopDocs topDocs = searcher.search(query, from + size, sort);
             long end = System.currentTimeMillis();
 
             return SearchResults.builder()
