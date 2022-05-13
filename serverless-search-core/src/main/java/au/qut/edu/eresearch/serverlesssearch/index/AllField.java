@@ -1,5 +1,6 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
+import au.qut.edu.eresearch.serverlesssearch.Constants;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;

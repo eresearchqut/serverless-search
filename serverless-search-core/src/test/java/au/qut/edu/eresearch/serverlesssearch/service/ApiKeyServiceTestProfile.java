@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServiceTestProfile implements QuarkusTestProfile {
+public class ApiKeyServiceTestProfile implements QuarkusTestProfile {
 
     public Map<String, String> getConfigOverrides() {
 

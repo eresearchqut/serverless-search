@@ -1,6 +1,8 @@
 package au.qut.edu.eresearch.serverlesssearch.index;
 
 
+import au.qut.edu.eresearch.serverlesssearch.Constants;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Data;

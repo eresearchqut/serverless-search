@@ -1,4 +1,4 @@
-package au.qut.edu.eresearch.serverlesssearch.index;
+package au.qut.edu.eresearch.serverlesssearch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.analysis.Analyzer;
@@ -62,13 +62,15 @@ public class Constants {
 
         public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
 
+        public static final String MATCH_ALL_QUERY_ATTRIBUTE_NAME = "match_all";
+
+        public static final String MATCH_NONE_QUERY_ATTRIBUTE_NAME = "match_none";
+
         public static final String TERM_QUERY_ATTRIBUTE_NAME = "term";
 
-        public static final Function<String, Map<String, Object>> MAP_QUERY_STRING_QUERY =
-                (query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
 
-        public static final BiFunction<String, String, Map<String, Object>> MAP_TERM_QUERY =
-                (field, query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
+
+
     }
 
 

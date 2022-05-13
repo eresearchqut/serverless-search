@@ -1,4 +1,4 @@
-package au.qut.edu.eresearch.serverlesssearch.index;
+package au.qut.edu.eresearch.serverlesssearch.query;
 
 public class QueryMapperException extends RuntimeException {
 
