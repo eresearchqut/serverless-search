@@ -6,17 +6,12 @@ import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class Constants {
 
@@ -73,38 +68,9 @@ public class Constants {
 
         public static final String TERM_QUERY_ATTRIBUTE_NAME = "term";
 
-        public static final Function<String, Map<String, Object>> QUERY_STRING_QUERY_MAP =
-                (query) -> Map.of(QUERY_STRING_ATTRIBUTE_NAME, Map.of(QUERY_ATTRIBUTE_NAME, query));
 
 
-        public static final Map<String, Object> MATCH_ALL_QUERY_MAP =
-                Map.of(MATCH_ALL_QUERY_ATTRIBUTE_NAME, Collections.EMPTY_MAP);
 
-        public static final Map<String, Object> MATCH_NONE_QUERY_MAP =
-                Map.of(MATCH_NONE_QUERY_ATTRIBUTE_NAME, Collections.EMPTY_MAP);
-
-        public static final BiFunction<String, String, Map<String, Object>> TERM_QUERY_MAP =
-                (field, term) -> Map.of(TERM_QUERY_ATTRIBUTE_NAME, Map.of(field, term));
-
-
-        public static final Function<Map<String, Map<String, String>>, Optional<SortField>>
-                SORT_FIELD = (sortFieldMap) ->
-                sortFieldMap
-                        .entrySet()
-                        .stream()
-                        .findFirst()
-                        .map(fieldEntry -> new SortField(fieldEntry.getKey(), SortField.Type.STRING));
-
-
-        public static final Function<List<Map<String, Map<String, String>>>, List<SortField>>
-                SORT_FIELDS = (sortFieldList) -> sortFieldList.stream().sequential().map(SORT_FIELD)
-                .filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
-
-        public static final Function<List<Map<String, Map<String, String>>>, Sort> SORT =  (sortFieldList) ->
-                Optional.ofNullable(sortFieldList).map(SORT_FIELDS)
-                        .map(sortFields -> sortFields.toArray(new SortField[0]))
-                        .map(sortFields -> sortFields.length == 0 ? Sort.RELEVANCE : new Sort(sortFields))
-                        .orElse(Sort.RELEVANCE);
     }
 
 

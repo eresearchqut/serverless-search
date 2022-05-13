@@ -1,7 +1,7 @@
 package au.qut.edu.eresearch.serverlesssearch.service;
 
-import au.qut.edu.eresearch.serverlesssearch.Constants;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import net.andreinc.mockneat.MockNeat;
@@ -11,8 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.inject.Inject;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -28,10 +26,9 @@ public class IndexServiceTest {
 
     public static final MockNeat mocker = MockNeat.threadLocal();
 
-    public static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public static BiFunction<Integer, String, List<IndexRequest>> GENERATE_INDEX_REQUEST = (count, indexId) ->
-             IntStream.range(0, count)
+            IntStream.range(0, count)
                     .mapToObj(iteration ->
                             new IndexRequest()
                                     .setIndex(indexId)
@@ -42,8 +39,9 @@ public class IndexServiceTest {
                                                     "name",
                                                     mocker.names().get(),
                                                     "dob",
-
-                                                    mocker.localDates().get().toString()
+                                                    mocker.localDates().get().toString(),
+                                                    "age",
+                                                    mocker.ints().from(IntStream.range(0, 120).toArray()).get()
                                             )
                                     )
                     )
@@ -76,7 +74,7 @@ public class IndexServiceTest {
         SearchResults results = indexService
                 .search(new QueryRequest()
                         .setIndex(index)
-                        .setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply("lastName:Cagney")));
+                        .setQuery(QueryMapper.QUERY_STRING_QUERY_MAP.apply("lastName:Cagney")));
 
 
         // then
@@ -127,7 +125,7 @@ public class IndexServiceTest {
         SearchResults results = indexService
                 .search(new QueryRequest()
                         .setIndex(index)
-                        .setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply("firstName:James")));
+                        .setQuery(QueryMapper.QUERY_STRING_QUERY_MAP.apply("firstName:James")));
 
         // then
         Assertions.assertEquals(
@@ -174,7 +172,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService
-                .search(new QueryRequest().setIndex(index).setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply("donald")));
+                .search(new QueryRequest().setIndex(index).setQuery(QueryMapper.QUERY_STRING_QUERY_MAP.apply("donald")));
 
 
         // then
@@ -212,7 +210,7 @@ public class IndexServiceTest {
         Exception exception = Assertions.assertThrows(
                 IndexNotFoundException.class,
                 () -> indexService
-                        .search(new QueryRequest().setIndex(index).setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply("lastName:cagney"))));
+                        .search(new QueryRequest().setIndex(index).setQuery(QueryMapper.QUERY_STRING_QUERY_MAP.apply("lastName:cagney"))));
 
 
         // then
@@ -290,7 +288,7 @@ public class IndexServiceTest {
         SearchResults results = indexService
                 .search(new QueryRequest()
                         .setIndex(index)
-                        .setQuery(Constants.Query.QUERY_STRING_QUERY_MAP.apply("person.firstName:Calvin")));
+                        .setQuery(QueryMapper.QUERY_STRING_QUERY_MAP.apply("person.firstName:Calvin")));
 
 
         // then
@@ -354,7 +352,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService.search(new QueryRequest().setIndex(index)
-                .setQuery(Constants.Query.TERM_QUERY_MAP.apply("_id", "i-am-a-term")));
+                .setQuery(QueryMapper.TERM_QUERY_MAP.apply("_id", "i-am-a-term")));
 
         // then
         Assertions.assertEquals(
@@ -384,7 +382,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService.search(new QueryRequest().setIndex(index)
-                .setQuery(Constants.Query.MATCH_ALL_QUERY_MAP));
+                .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
 
 
         // then
@@ -395,7 +393,7 @@ public class IndexServiceTest {
             ids.addAll(results.getHits().getHits().stream().map(Hit::getId).collect(Collectors.toList()));
             from += results.getHits().getHits().size();
             results = indexService.search(new QueryRequest().setIndex(index).setFrom(from)
-                    .setQuery(Constants.Query.MATCH_ALL_QUERY_MAP));
+                    .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
         }
 
         Assertions.assertEquals(totalHits, ids.size());
@@ -415,7 +413,7 @@ public class IndexServiceTest {
 
         // when
         SearchResults results = indexService.search(new QueryRequest().setIndex(index).setSize(size)
-                .setQuery(Constants.Query.MATCH_ALL_QUERY_MAP));
+                .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
 
 
         // then
@@ -429,7 +427,7 @@ public class IndexServiceTest {
             ids.addAll(results.getHits().getHits().stream().map(Hit::getId).collect(Collectors.toList()));
             from += results.getHits().getHits().size();
             results = indexService.search(new QueryRequest().setIndex(index).setSize(size).setFrom(from)
-                    .setQuery(Constants.Query.MATCH_ALL_QUERY_MAP));
+                    .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
 
         }
 
@@ -437,6 +435,35 @@ public class IndexServiceTest {
 
         int expectedPages = indexSize / size + (indexSize % size == 0 ? 0 : 1);
         Assertions.assertEquals(expectedPages, paged);
+
+    }
+
+
+    @ParameterizedTest
+    @ValueSource(strings = {"name", "dob", "age"})
+    public void sortField(String sortField) {
+
+
+        // given
+        String index = UUID.randomUUID().toString();
+        List<IndexRequest> indexRequests = GENERATE_INDEX_REQUEST.apply(30, index);
+        indexService.index(indexRequests);
+
+        // when
+        SearchResults results = indexService.search(new QueryRequest().setIndex(index)
+                .setSort(List.of(Map.of(sortField, (Map<String, String>)Collections.EMPTY_MAP)))
+                .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
+
+        // then
+        List<?> values = results.getHits().getHits().stream()
+                .map(Hit::getSource)
+                .map(source -> source.get(sortField))
+                .collect(Collectors.toList());
+
+        List<?> expected = List.copyOf(values).stream().sorted().collect(Collectors.toList());
+
+        Assertions.assertEquals(expected, values);
+
 
     }
 

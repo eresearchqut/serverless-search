@@ -67,6 +67,7 @@ public class IndexUtils {
         }
     }
 
+
     static Document getDocument(IndexSearcher indexSearcher, ScoreDoc scoreDoc) {
         try {
             return indexSearcher.doc(scoreDoc.doc);

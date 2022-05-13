@@ -2,9 +2,11 @@ package au.qut.edu.eresearch.serverlesssearch.service;
 
 import au.qut.edu.eresearch.serverlesssearch.Constants;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
-import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
+import au.qut.edu.eresearch.serverlesssearch.query.QueryMapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -70,16 +72,17 @@ public class IndexService {
 
     public SearchResults search(QueryRequest queryRequest) {
         try {
-            QueryBuilder queryBuilder = Constants.OBJECT_MAPPER.convertValue(queryRequest.getQuery(), QueryBuilder.class);
+            QueryBuilder queryBuilder = QueryMapper.QUERY_BUILDER.apply(queryRequest.getQuery());
             Query query = queryBuilder.build();
 
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, queryRequest.getIndex());
-            long start = System.currentTimeMillis();
+            Map<String, FieldInfo> fields = QueryMapper.FIELD_INFO.apply(searcher);
 
             int size = Optional.ofNullable(queryRequest.getSize()).orElse(Constants.Query.DEFAULT_SIZE);
             int from = Optional.ofNullable(queryRequest.getFrom()).orElse(0);
-            Sort sort = Constants.Query.SORT.apply(queryRequest.getSort());
+            Sort sort = QueryMapper.SORT.apply(fields, queryRequest.getSort());
 
+            long start = System.currentTimeMillis();
             TopDocs topDocs = searcher.search(query, from + size, sort);
             long end = System.currentTimeMillis();
 

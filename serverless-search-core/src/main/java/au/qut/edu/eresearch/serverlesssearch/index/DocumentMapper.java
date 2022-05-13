@@ -7,6 +7,7 @@ import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.util.BytesRef;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -30,25 +31,45 @@ public class DocumentMapper {
     static Function<String, Stream<IndexableField>> MAP_SOURCE = source ->
             Stream.of(new SourceField(source));
 
-    static IndexableField mapField(String key, Object value) {
+
+
+    static Field docValuesField(String field, Object value) {
         if (value instanceof Integer) {
-            return new IntPoint(key, (Integer) value);
+            return new SortedNumericDocValuesField(field, (Integer) value);
         }
         if (value instanceof Long) {
-            return new LongPoint(key, (Long) value);
+            return new SortedNumericDocValuesField(field, (Long) value);
         }
         if (value instanceof BigInteger) {
-            return new BigIntegerPoint(key, (BigInteger) value);
+            return new SortedNumericDocValuesField(field, ((BigInteger) value).longValue());
         }
         if (value instanceof Double) {
-            return new DoublePoint(key, (Double) value);
+            return new SortedNumericDocValuesField(field, ((Double) value).longValue());
         }
-        return new TextField(key, value.toString(), Field.Store.NO);
+        return new SortedDocValuesField(field, new BytesRef(value.toString()));
+    }
+
+
+    static Field indexField(String field, Object value) {
+        if (value instanceof Integer) {
+            return new IntPoint(field, (Integer) value);
+        }
+        if (value instanceof Long) {
+            return new LongPoint(field, (Long) value);
+        }
+        if (value instanceof BigInteger) {
+            return new BigIntegerPoint(field, (BigInteger) value);
+        }
+        if (value instanceof Double) {
+            return new DoublePoint(field, (Double) value);
+        }
+        return new TextField(field, value.toString(), Field.Store.NO);
     }
 
 
     static Function<Map.Entry<String, Object>, Stream<IndexableField>> MAP_FIELD_AND_ALL = flattenedMapEntry ->
-            Stream.of(mapField(flattenedMapEntry.getKey(), flattenedMapEntry.getValue()),
+            Stream.of(indexField(flattenedMapEntry.getKey(), flattenedMapEntry.getValue()),
+                    docValuesField(flattenedMapEntry.getKey(), flattenedMapEntry.getValue()),
                     new AllField(flattenedMapEntry.getValue().toString()));
 
     static Function<Map<String, Object>, Stream<IndexableField>> MAP_FIELDS = flattenedMap ->
