@@ -8,6 +8,7 @@ import com.github.wnameless.json.unflattener.JsonUnflattener;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.NumericUtils;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class DocumentMapper {
             return new SortedNumericDocValuesField(field, ((BigInteger) value).longValue());
         }
         if (value instanceof Double) {
-            return new SortedNumericDocValuesField(field, ((Double) value).longValue());
+            return new SortedNumericDocValuesField(field, NumericUtils.doubleToSortableLong((Double)value));
         }
         return new SortedDocValuesField(field, new BytesRef(value.toString()));
     }

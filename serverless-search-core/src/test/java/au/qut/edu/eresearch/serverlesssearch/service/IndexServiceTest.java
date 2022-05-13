@@ -40,6 +40,8 @@ public class IndexServiceTest {
                                                     mocker.names().get(),
                                                     "dob",
                                                     mocker.localDates().get().toString(),
+                                                    "riskProfile",
+                                                    mocker.doubles().get(),
                                                     "age",
                                                     mocker.ints().from(IntStream.range(0, 120).toArray()).get()
                                             )
@@ -440,7 +442,7 @@ public class IndexServiceTest {
 
 
     @ParameterizedTest
-    @ValueSource(strings = {"name", "dob", "age"})
+    @ValueSource(strings = {"name", "dob", "age", "riskProfile"})
     public void sortField(String sortField) {
 
 

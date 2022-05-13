@@ -3,7 +3,6 @@ package au.qut.edu.eresearch.serverlesssearch.service;
 import au.qut.edu.eresearch.serverlesssearch.Constants;
 import au.qut.edu.eresearch.serverlesssearch.index.DocumentMapper;
 import au.qut.edu.eresearch.serverlesssearch.model.*;
-import au.qut.edu.eresearch.serverlesssearch.query.QueryBuilder;
 import au.qut.edu.eresearch.serverlesssearch.query.QueryMapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.FieldInfo;
@@ -72,8 +71,8 @@ public class IndexService {
 
     public SearchResults search(QueryRequest queryRequest) {
         try {
-            QueryBuilder queryBuilder = QueryMapper.QUERY_BUILDER.apply(queryRequest.getQuery());
-            Query query = queryBuilder.build();
+
+            Query query = QueryMapper.QUERY.apply(queryRequest.getQuery());
 
             IndexSearcher searcher = IndexUtils.getIndexSearcher(indexMount, queryRequest.getIndex());
             Map<String, FieldInfo> fields = QueryMapper.FIELD_INFO.apply(searcher);
