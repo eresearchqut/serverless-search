@@ -466,6 +466,24 @@ public class IndexServiceTest {
 
         Assertions.assertEquals(expected, values);
 
+        // when (sort desc)
+        results = indexService.search(new QueryRequest().setIndex(index)
+                .setSort(List.of(Map.of(sortField, Map.of("order", "desc"))))
+                .setQuery(QueryMapper.MATCH_ALL_QUERY_MAP));
+
+        // then
+        values = results.getHits().getHits().stream()
+                .map(Hit::getSource)
+                .map(source -> source.get(sortField))
+                .collect(Collectors.toList());
+
+
+        expected = List.copyOf(values).stream().sorted().collect(Collectors.toList());
+        Collections.reverse(expected);
+
+        Assertions.assertEquals(expected, values);
+
+
 
     }
 

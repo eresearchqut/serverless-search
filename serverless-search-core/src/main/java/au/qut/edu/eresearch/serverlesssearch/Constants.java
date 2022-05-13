@@ -60,6 +60,10 @@ public class Constants {
 
         public static final String DEFAULT_FIELD_ATTRIBUTE_NAME = "default_field";
 
+        public static final String ORDER_ATTRIBUTE_NAME = "order";
+
+        public static final String ORDER_DESC = "desc";
+
         public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
 
         public static final String MATCH_ALL_QUERY_ATTRIBUTE_NAME = "match_all";

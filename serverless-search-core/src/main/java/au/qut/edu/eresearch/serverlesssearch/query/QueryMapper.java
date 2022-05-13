@@ -37,21 +37,29 @@ public class QueryMapper {
             (field, term) -> Map.of(Constants.Query.TERM_QUERY_ATTRIBUTE_NAME, Map.of(field, term));
 
 
-    static Function<FieldInfo, SortField> SORT_FIELD = fieldInfo -> {
-      if (DocValuesType.SORTED_NUMERIC.equals(fieldInfo.getDocValuesType())) {
-          return new SortedNumericSortField(fieldInfo.name, SortField.Type.LONG);
-      }
-      return new SortField(fieldInfo.name, SortField.Type.STRING);
+    static Function<Map<String, String>, Boolean> SORT_ORDER_DESC = fieldConfig ->
+            Optional.ofNullable(fieldConfig.get(Constants.Query.ORDER_ATTRIBUTE_NAME))
+                    .map(order -> Constants.Query.ORDER_DESC.equalsIgnoreCase(order))
+                    .orElse(Boolean.FALSE);
+
+
+
+
+    static BiFunction<FieldInfo, Boolean, SortField> SORT_FIELD = (fieldInfo, reverse) -> {
+        if (DocValuesType.SORTED_NUMERIC.equals(fieldInfo.getDocValuesType())) {
+            return new SortedNumericSortField(fieldInfo.name, SortField.Type.LONG, Optional.ofNullable(reverse).orElse(Boolean.FALSE));
+        }
+        return new SortField(fieldInfo.name, SortField.Type.STRING, Optional.ofNullable(reverse).orElse(Boolean.FALSE));
     };
 
     public static final BiFunction<Map<String, FieldInfo>, List<Map<String, Map<String, String>>>, List<SortField>>
             SORT_FIELDS = (fieldInfos, sortFieldList) -> sortFieldList.stream().sequential()
             .flatMap(sortFieldConfig -> sortFieldConfig.entrySet().stream())
-            .map(Map.Entry::getKey)
-            .map(fieldName -> Optional.ofNullable(fieldInfos.get(fieldName)))
+            .map(fieldConfig ->
+                    Optional.ofNullable(fieldInfos.get(fieldConfig.getKey()))
+                            .map(fieldInfo -> SORT_FIELD.apply(fieldInfo, SORT_ORDER_DESC.apply(fieldConfig.getValue()))))
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .map(SORT_FIELD)
             .collect(Collectors.toList());
 
     public static final BiFunction<Map<String, FieldInfo>, List<Map<String, Map<String, String>>>, Sort> SORT = (fieldInfos, sortFieldList) ->
