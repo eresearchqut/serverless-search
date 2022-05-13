@@ -82,7 +82,7 @@ public class IndexService {
             Sort sort = QueryMapper.SORT.apply(fields, queryRequest.getSort());
 
             long start = System.currentTimeMillis();
-            TopDocs topDocs = searcher.search(query, from + size, sort);
+            TopDocs topDocs = searcher.search(query, from + size, sort, true);
             long end = System.currentTimeMillis();
 
             return SearchResults.builder()
@@ -93,12 +93,12 @@ public class IndexService {
                                     .value(topDocs.totalHits.value)
                                     .relation(topDocs.totalHits.relation == TotalHits.Relation.EQUAL_TO ? "eq" : "gte")
                                     .build())
-                            .hits(Arrays.stream(topDocs.scoreDocs).skip(from).limit(size).sequential().map(scoreDoc ->
-                                    Hit.builder()
-                                            .index(queryRequest.getIndex())
-                                            .id(DocumentMapper.GET_ID.apply(IndexUtils.getDocument(searcher, scoreDoc)))
-                                            .source(DocumentMapper.GET_SOURCE.apply(IndexUtils.getDocument(searcher, scoreDoc)))
-                                            .score(scoreDoc.score).build()).collect(Collectors.toList()))
+                            .hits(Arrays.stream(topDocs.scoreDocs).skip(from).limit(size).sequential()
+                                    .map(scoreDoc -> Hit.builder()
+                                                    .index(queryRequest.getIndex())
+                                                    .id(DocumentMapper.GET_ID.apply(IndexUtils.getDocument(searcher, scoreDoc)))
+                                                    .source(DocumentMapper.GET_SOURCE.apply(IndexUtils.getDocument(searcher, scoreDoc)))
+                                                    .score(scoreDoc.score).build()).collect(Collectors.toList()))
                             .build())
                     .build();
         } catch (IOException e) {
