@@ -64,6 +64,18 @@ public class Constants {
 
         public static final String ORDER_DESC = "desc";
 
+
+        public static final String BOOL_ATTRIBUTE_NAME = "bool";
+
+        public static final String MUST_ATTRIBUTE_NAME = "must";
+
+        public static final String MUST_NOT_ATTRIBUTE_NAME = "must_not";
+
+        public static final String SHOULD_ATTRIBUTE_NAME = "should";
+
+        public static final String FILTER_ATTRIBUTE_NAME = "filter";
+
+
         public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
 
         public static final String MATCH_ALL_QUERY_ATTRIBUTE_NAME = "match_all";

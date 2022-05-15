@@ -1,7 +1,7 @@
 package au.qut.edu.eresearch.serverlesssearch.query;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +24,7 @@ public class MatchAllQueryBuilderTest {
         Map<String, Object> queryStringQuery = Map.of("match_all", Collections.EMPTY_MAP);
         QueryBuilder queryBuilder = OBJECT_MAPPER.convertValue(queryStringQuery, QueryBuilder.class);
         Assertions.assertEquals(queryBuilder.build(),
-                new BooleanQuery.Builder()
-                        .build()
+                new MatchAllDocsQuery()
         );
     }
 
