@@ -69,4 +69,17 @@ public class BooleanQueryBuilderTest {
         );
     }
 
+
+    @Test
+    public void buildMustBoolShouldQuery() throws Exception {
+        Map<String, Object> booleanMustQuery = Map.of("bool", Map.of("must", Map.of("bool", Map.of("should", Map.of("query_string", Map.of("query", "The wind AND (rises OR rising)"))))));
+        QueryBuilder queryBuilder = OBJECT_MAPPER.convertValue(booleanMustQuery, QueryBuilder.class);
+        Assertions.assertEquals(
+                queryBuilder.build(),
+                new BooleanQuery.Builder().add(
+                new BooleanQuery.Builder().add(new QueryParser("_all", new StandardAnalyzer()).parse("The wind AND (rises OR rising)"), BooleanClause.Occur.SHOULD).build(), BooleanClause.Occur.MUST).build()
+        );
+    }
+
+
 }
