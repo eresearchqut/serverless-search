@@ -45,7 +45,7 @@ public class IndexHandler {
         String message = INDEX_REQUEST_WRITER.writeValueAsString(indexRequest);
         sqs.sendMessage(m -> m.queueUrl(queueUrl).messageBody(message).messageGroupId(index)
                 .messageDeduplicationId(String.format("%s:%d", index, indexRequest.hashCode())));
-        return Document.builder().id(id).index(index).build();
+        return Document.builder().id(id).index(index).source(document).build();
     }
 
     @POST
