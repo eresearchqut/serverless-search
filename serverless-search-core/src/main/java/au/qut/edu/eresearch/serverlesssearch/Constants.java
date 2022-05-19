@@ -78,6 +78,10 @@ public class Constants {
 
         public static final String MATCH_QUERY_ATTRIBUTE_NAME = "match";
 
+        public static final String MATCH_PHRASE_QUERY_ATTRIBUTE_NAME = "match_phrase";
+
+        public static final String MATCH_PHRASE_PREFIX_QUERY_ATTRIBUTE_NAME = "match_phrase_prefix";
+
         public static final String MATCH_ALL_QUERY_ATTRIBUTE_NAME = "match_all";
 
         public static final String MATCH_NONE_QUERY_ATTRIBUTE_NAME = "match_none";

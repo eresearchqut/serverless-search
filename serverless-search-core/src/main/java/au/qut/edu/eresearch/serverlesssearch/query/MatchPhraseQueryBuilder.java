@@ -11,10 +11,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 
 import java.io.StringReader;
 import java.util.Map;
@@ -23,30 +20,28 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @Accessors(chain = true)
-public class MatchQueryBuilder implements QueryBuilder {
+public class MatchPhraseQueryBuilder implements QueryBuilder {
 
-    @JsonProperty(Constants.Query.MATCH_QUERY_ATTRIBUTE_NAME)
-    private Map<String, Object> match;
+    @JsonProperty(Constants.Query.MATCH_PHRASE_QUERY_ATTRIBUTE_NAME)
+    private Map<String, Object> matchPhrase;
 
 
     @Override
     public Query build() {
-        QueryConfig matchQuery = QueryMapper.QUERY_CONFIG(this.match);
-        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-
-        try (Analyzer analyzer = Constants.Analysers.ANALYZER.apply(matchQuery.getAnalyzerName());
-             TokenStream stream = analyzer.tokenStream(matchQuery.getField(), new StringReader(matchQuery.getQuery()))) {
+        QueryConfig queryConfig = QueryMapper.QUERY_CONFIG(this.matchPhrase);
+        PhraseQuery.Builder queryBuilder = new PhraseQuery.Builder();
+        try (Analyzer analyzer = Constants.Analysers.ANALYZER.apply(queryConfig.getAnalyzerName());
+             TokenStream stream = analyzer.tokenStream(queryConfig.getField(), new StringReader(queryConfig.getQuery()))) {
             stream.reset();
             while (stream.incrementToken()) {
-                Query termQuery = new TermQuery(new Term(
-                        matchQuery.getField(),
+                queryBuilder.add(new Term(
+                        queryConfig.getField(),
                         stream.getAttribute(CharTermAttribute.class).toString()));
-                queryBuilder.add(termQuery, BooleanClause.Occur.SHOULD);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
+        queryBuilder.setSlop(queryConfig.getSlop());
         return queryBuilder.build();
     }
 }

@@ -43,6 +43,17 @@ public class QueryMapper {
                     .orElse(Boolean.FALSE);
 
 
+    static QueryConfig QUERY_CONFIG(Map<String, Object> queryMap) {
+        Map.Entry<String, Object> matchEntry = queryMap.entrySet().stream().findAny().orElseThrow(() -> new RuntimeException("No query specified"));
+        QueryConfig matchQuery = new QueryConfig();
+        if (matchEntry.getValue() instanceof String) {
+            matchQuery.setQuery((String) matchEntry.getValue());
+        } else if (matchEntry.getValue() instanceof Map) {
+            matchQuery = Constants.OBJECT_MAPPER.convertValue(matchEntry.getValue(), QueryConfig.class);
+        }
+        matchQuery.setField(matchEntry.getKey());
+        return matchQuery;
+    }
 
 
     static BiFunction<FieldInfo, Boolean, SortField> SORT_FIELD = (fieldInfo, reverse) -> {

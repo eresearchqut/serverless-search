@@ -10,6 +10,7 @@ import org.apache.lucene.search.Query;
         @JsonSubTypes.Type(TermQueryBuilder.class),
         @JsonSubTypes.Type(BooleanQueryQueryBuilder.class),
         @JsonSubTypes.Type(MatchQueryBuilder.class),
+        @JsonSubTypes.Type(MatchPhraseQueryBuilder.class),
         @JsonSubTypes.Type(MatchAllQueryBuilder.class),
         @JsonSubTypes.Type(MatchNoneQueryBuilder.class)})
 public interface QueryBuilder {
